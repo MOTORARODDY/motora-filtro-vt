@@ -5,34 +5,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Motora: Missão Filtro VT - BrasilCenter</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
-        body { background: #0f172a; color: #fff; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; width: 100vw; height: 100dvh; display: flex; flex-direction: column; }
-        #game-container { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; background: #1e293b; }
-        canvas { display: block; width: 100%; height: 100%; background: linear-gradient(to bottom, #38bdf8, #bae6fd 60%, #15803d 60%, #166534 100%); }
-        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 10px; }
-        .interactive { pointer-events: auto; }
-        .hud-top { display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.9); padding: 8px 14px; border-radius: 12px; border: 2px solid rgba(56, 189, 248, 0.5); font-size: 13px; font-weight: bold; flex-wrap: wrap; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
-        .btn { background: #2563eb; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: transform 0.1s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .btn:active { transform: scale(0.95); }
-        .btn-green { background: #16a34a; }
-        .btn-red { background: #dc2626; }
-        .btn-yellow { background: #ca8a04; color: #fff; }
-        .screen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 50; text-align: center; }
-        .controls-bar { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; padding-bottom: env(safe-area-inset-bottom, 10px); pointer-events: auto; }
-        
-        /* D-Pad Estilizado Circular */
-        .dpad-container { position: relative; width: 160px; height: 160px; background: rgba(15, 23, 42, 0.6); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .dpad-btn { position: absolute; background: #334155; border: 2px solid rgba(255,255,255,0.4); color: white; font-size: 14px; font-weight: bold; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; width: 48px; height: 48px; }
-        .dpad-btn:active { background: #38bdf8; color: #0f172a; }
-        #dpad-up { top: 6px; left: 56px; }
-        #dpad-down { bottom: 6px; left: 56px; }
-        #dpad-left { left: 6px; top: 56px; }
-        #dpad-right { right: 6px; top: 56px; }
-        #dpad-center { width: 32px; height: 32px; background: #1e293b; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+        body { background: #071120; color: #fff; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; overflow: hidden; width: 100vw; height: 100dvh; }
+        #game-container { position: relative; width: 100vw; height: 100dvh; overflow: hidden; background: #0f172a; }
+        canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 
-        .action-btns { display: flex; gap: 15px; align-items: flex-end; background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.2); backdrop-filter: blur(4px); }
-        .action-btn { width: 85px; height: 85px; border-radius: 50%; font-weight: bold; font-size: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 3px solid #fff; box-shadow: 0 6px 15px rgba(0,0,0,0.5); cursor: pointer; text-align: center; }
-        .shop-bar { display: flex; gap: 6px; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 8px; align-items: center; border: 1px solid rgba(255,255,255,0.1); }
+        /* Barra Superior Estilo Painel de Jogo (Igual ao Print) */
+        .top-bar {
+            position: absolute; top: 6px; left: 8px; right: 8px;
+            background: rgba(10, 22, 44, 0.92);
+            border: 1.5px solid rgba(56, 189, 248, 0.45);
+            border-radius: 14px; padding: 5px 10px;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 6px; flex-wrap: nowrap; overflow-x: auto;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45); z-index: 20;
+        }
+        .pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 800;
+            white-space: nowrap; border: 1.5px solid rgba(255,255,255,0.2);
+        }
+        .pill-bc { background: #0d2847; color: #fff; border-color: #38bdf8; }
+        .dot-green { width: 9px; height: 9px; background: #84cc16; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px #84cc16; }
+        .pill-time { background: #450a0a; color: #fecaca; border-color: #ef4444; }
+        .pill-money { background: #064e3b; color: #a7f3d0; border-color: #10b981; }
+        .pill-energy { background: #0f172a; color: #e2e8f0; border-color: #38bdf8; min-width: 125px; flex-direction: column; align-items: stretch; padding: 3px 9px; gap: 2px; }
+        .energy-row { display: flex; justify-content: space-between; font-size: 9px; color: #93c5fd; }
+        .energy-track { width: 100%; height: 6px; background: #1e293b; border-radius: 4px; overflow: hidden; }
+        .energy-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #84cc16, #38bdf8); transition: width 0.2s; }
+
+        .shop-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 800;
+            color: #fff; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.45);
+            white-space: nowrap; transition: transform 0.1s, opacity 0.2s;
+        }
+        .shop-btn:active { transform: scale(0.94); }
+        .shop-patinete { background: linear-gradient(180deg, #f59e0b, #d97706); color: #1e293b; }
+        .shop-bike { background: linear-gradient(180deg, #38bdf8, #0284c7); }
+        .shop-motinha { background: linear-gradient(180deg, #9333ea, #6b21a8); }
+        .shop-locked { opacity: 0.55; }
+
+        .icon-btn {
+            background: #1e293b; color: #e2e8f0; border: 1.5px solid rgba(148,163,184,0.4);
+            border-radius: 10px; padding: 5px 8px; font-size: 11px; font-weight: 800; cursor: pointer;
+        }
+
+        /* Faixa Informativa Flutuante abaixo do Topo */
+        .sub-banner {
+            position: absolute; top: 48px; left: 50%; transform: translateX(-50%);
+            background: rgba(10, 22, 44, 0.88); border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 999px; padding: 4px 16px; font-size: 11.5px; font-weight: 700;
+            color: #fde047; white-space: nowrap; z-index: 18; pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+        }
+        .sub-banner span.equip { color: #38bdf8; margin-right: 8px; }
+
+        /* Controles Inferiores (Achatados em T Invertido sem bola preta + Botões Redondos) */
+        .controls-layer {
+            position: absolute; bottom: 10px; left: 14px; right: 14px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            pointer-events: none; z-index: 25;
+        }
+        .dpad-flat {
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            pointer-events: auto;
+        }
+        .dpad-row { display: flex; gap: 6px; }
+        .key-btn {
+            width: 56px; height: 44px; border-radius: 12px;
+            background: rgba(15, 23, 42, 0.68);
+            border: 2px solid rgba(148, 163, 184, 0.55);
+            color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 15px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.35); backdrop-filter: blur(3px);
+        }
+        .key-btn span { font-size: 8px; letter-spacing: 0.4px; color: #cbd5e1; margin-top: 1px; }
+        .key-btn:active, .key-btn.active { background: rgba(56, 189, 248, 0.55); border-color: #fff; transform: scale(0.95); }
+
+        .action-pod {
+            display: flex; gap: 12px; align-items: center;
+            background: rgba(15, 23, 42, 0.45); padding: 8px 12px;
+            border-radius: 26px; border: 1.5px solid rgba(255,255,255,0.22);
+            backdrop-filter: blur(4px); pointer-events: auto;
+        }
+        .round-action {
+            width: 82px; height: 82px; border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #fff; font-weight: 900; cursor: pointer;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.5); transition: transform 0.08s;
+        }
+        .round-action:active { transform: scale(0.93); }
+        .btn-shoot {
+            background: radial-gradient(circle at 35% 30%, #ef4444, #b91c1c);
+            border: 3.5px solid #facc15;
+        }
+        .btn-jump {
+            background: radial-gradient(circle at 35% 30%, #3b82f6, #1d4ed8);
+            border: 3.5px solid #7dd3fc;
+        }
+        .round-action .main-lbl { font-size: 12px; margin-top: 2px; }
+        .round-action .sub-lbl { font-size: 8px; opacity: 0.9; font-weight: 700; }
+
+        /* Telas Modais (Menu Inicial, Briefing, Guia, Vitória/GameOver) */
+        .modal-backdrop {
+            position: absolute; inset: 0; background: rgba(7, 17, 32, 0.88);
+            display: flex; align-items: center; justify-content: center;
+            padding: 14px; z-index: 60; backdrop-filter: blur(5px);
+        }
+        .modal-card {
+            background: linear-gradient(165deg, #0f2447, #09152b);
+            border: 2px solid #38bdf8; border-radius: 20px;
+            padding: 18px 22px; max-width: 600px; width: 100%;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.75); color: #fff;
+            max-height: 92dvh; overflow-y: auto;
+        }
+        .cta-btn {
+            border: none; border-radius: 12px; padding: 11px 18px;
+            font-size: 14px; font-weight: 900; color: #fff; cursor: pointer;
+            box-shadow: 0 5px 14px rgba(0,0,0,0.4); transition: transform 0.1s;
+        }
+        .cta-btn:active { transform: scale(0.96); }
+        .cta-green { background: linear-gradient(180deg, #22c55e, #15803d); }
+        .cta-blue { background: linear-gradient(180deg, #38bdf8, #0284c7); }
+        .cta-red { background: linear-gradient(180deg, #ef4444, #b91c1c); }
+        .cta-gray { background: #334155; }
     </style>
 </head>
 <body>
@@ -40,456 +137,1059 @@
 <div id="game-container">
     <canvas id="gameCanvas"></canvas>
 
-    <!-- UI Superior (HUD) -->
-    <div class="ui-overlay">
-        <div class="hud-top interactive">
-          <div>🔵 BrasilCenter</div>
-          <div>⏱️ <span id="ui-time">90</span>s</div>
-          <div>💰 R$ <span id="ui-money">0</span></div>
-          <div>⚡ <span id="ui-energy">100</span>%</div>
-          <div>🎯 Meta: <span id="ui-progress">0/30</span></div>
-          <div class="shop-bar">
-            <button class="btn btn-yellow" onclick="buyVehicle('patinete')" style="font-size:11px; padding:3px 6px;">🛴 R$50</button>
-            <button class="btn btn-yellow" onclick="buyVehicle('bike')" style="font-size:11px; padding:3px 6px;">🚲 R$120</button>
-            <button class="btn btn-yellow" onclick="buyVehicle('motinha')" style="font-size:11px; padding:3px 6px;">🛵 R$250</button>
-          </div>
-          <div>
-            <button class="btn" onclick="switchPhase(1)" id="btn-f1-top">F1 💿</button>
-            <button class="btn btn-red" onclick="switchPhase(2)" id="btn-f2-top">🔒 F2 🔌</button>
-            <button class="btn" onclick="togglePause()" style="background:#475569;">⏸️</button>
-          </div>
+    <!-- Barra Superior -->
+    <div class="top-bar">
+        <div class="pill pill-bc"><span class="dot-green"></span> BrasilCenter</div>
+        <div class="pill pill-time">⏱️ <span id="hud-time">90</span>s</div>
+        <div class="pill pill-money">💵 R$ <span id="hud-money">0</span></div>
+        <div class="pill pill-energy">
+            <div class="energy-row"><span>⚡ ENERGIA</span><span id="hud-energy-txt">100%</span></div>
+            <div class="energy-track"><div class="energy-fill" id="hud-energy-bar"></div></div>
         </div>
 
-        <!-- Controles Inferiores (D-Pad Circular e Ações Estilizadas) -->
-        <div class="controls-bar">
-            <div class="dpad-container">
-                <button class="dpad-btn interactive" id="dpad-up" ontouchstart="handleInput('up', true)" ontouchend="handleInput('up', false)" onmousedown="handleInput('up', true)" onmouseup="handleInput('up', false)">⬆️<span style="font-size:8px">CIMA</span></button>
-                <div id="dpad-center"></div>
-                <button class="dpad-btn interactive" id="dpad-left" ontouchstart="handleInput('left', true)" ontouchend="handleInput('left', false)" onmousedown="handleInput('left', true)" onmouseup="handleInput('left', false)">⬅️<span style="font-size:8px">ESQ</span></button>
-                <button class="dpad-btn interactive" id="dpad-right" ontouchstart="handleInput('right', true)" ontouchend="handleInput('right', false)" onmousedown="handleInput('right', true)" onmouseup="handleInput('right', false)">➡️<span style="font-size:8px">DIR</span></button>
-                <button class="dpad-btn interactive" id="dpad-down" ontouchstart="handleInput('down', true)" ontouchend="handleInput('down', false)" onmousedown="handleInput('down', true)" onmouseup="handleInput('down', false)">⬇️<span style="font-size:8px">BAIXO</span></button>
+        <button class="shop-btn shop-patinete" id="btn-buy-patinete" onclick="buyVehicle('patinete')">🛴 Patinete R$50</button>
+        <button class="shop-btn shop-bike" id="btn-buy-bike" onclick="buyVehicle('bike')">🚲 Bike R$120</button>
+        <button class="shop-btn shop-motinha" id="btn-buy-motinha" onclick="buyVehicle('motinha')">🛵 Motinha R$250</button>
+
+        <button class="icon-btn" onclick="trySwitchPhase(1)" id="btn-top-f1">F1 💿</button>
+        <button class="icon-btn" onclick="trySwitchPhase(2)" id="btn-top-f2">🔒 F2</button>
+        <button class="icon-btn" onclick="openGuide()">❓</button>
+        <button class="icon-btn" onclick="toggleFullScreen()">⛶</button>
+    </div>
+
+    <!-- Faixa de Meta e Status -->
+    <div class="sub-banner" id="sub-banner">
+        <span class="equip" id="hud-equip">👟 Tênis Preto Original</span> |
+        <span id="hud-mission">Fase 1 (0/30): Acerte casinhas c/ Disco VT (+15s) ou pise nos rivais (+R$35)!</span>
+    </div>
+
+    <!-- Controles em T Invertido na Esquerda e Botões Redondos na Direita -->
+    <div class="controls-layer">
+        <div class="dpad-flat">
+            <div class="dpad-row">
+                <button class="key-btn" id="k-up">⬆️<span>SUBIR</span></button>
             </div>
-            <div class="action-btns">
-                <button class="action-btn btn-blue interactive" style="background:#2563eb;" ontouchstart="doJump()" onmousedown="doJump()">⬆️<br><b>PULAR</b><br><span style="font-size:9px">2X NO AR</span></button>
-                <button class="action-btn btn-red interactive" style="background:#dc2626;" ontouchstart="doAction()" onmousedown="doAction()">🔴<br><b>ATIRAR</b><br><span style="font-size:9px">DISCO VT</span></button>
+            <div class="dpad-row">
+                <button class="key-btn" id="k-left">⬅️<span>ESQ</span></button>
+                <button class="key-btn" id="k-down">⬇️<span>DESCER</span></button>
+                <button class="key-btn" id="k-right">➡️<span>DIR</span></button>
             </div>
+        </div>
+
+        <div class="action-pod">
+            <button class="round-action btn-shoot" id="k-shoot">
+                <span style="font-size:20px;">🎧</span>
+                <span class="main-lbl" id="lbl-shoot-main">ATIRAR</span>
+                <span class="sub-lbl" id="lbl-shoot-sub">DISCO VT</span>
+            </button>
+            <button class="round-action btn-jump" id="k-jump">
+                <span style="font-size:20px;">⬆️</span>
+                <span class="main-lbl">PULAR</span>
+                <span class="sub-lbl">2x NO AR</span>
+            </button>
         </div>
     </div>
 
-    <!-- Tela Inicial / Menu Principal -->
-    <div id="screen-start" class="screen-overlay">
-        <div style="background: rgba(15,23,42,0.95); padding: 25px; border-radius: 16px; border: 2px solid #38bdf8; max-width: 550px; width: 100%;">
-            <h1 style="color: #38bdf8; font-size: 22px; margin-bottom: 6px;">🎮 MOTORA: MISSÃO FILTRO VT</h1>
-            <p style="color: #cbd5e1; font-size: 13px; margin-bottom: 15px;">BrasilCenter • #SouDaQualidade[span_2](start_span)[span_2](end_span)</p>
-            <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 20px;">
-                <button class="btn btn-green" style="padding: 12px 20px; font-size: 14px;" onclick="startBriefing(1)">▶️ INICIAR FASE 1 (DISCOS)</button>
-                <button class="btn btn-red" id="menu-btn-f2" style="padding: 12px 20px; font-size: 14px;" onclick="startBriefing(2)">🔒 FASE 2 (FIBRA)</button>
+    <!-- Modal Inicial (Caixa Colecionável BrasilCenter) -->
+    <div class="modal-backdrop" id="modal-start">
+        <div class="modal-card" style="text-align:center;">
+            <div style="font-size:12px; color:#84cc16; font-weight:800; letter-spacing:1px;">BRASILCENTER • #SOUDAQUALIDADE</div>
+            <h1 style="font-size:22px; color:#38bdf8; margin:4px 0 8px;">🎮 MOTORA: REP DE FILTRO VT</h1>
+            <p style="font-size:12.5px; color:#cbd5e1; margin-bottom:14px;">
+                Resolva reclamações de <b>Internet, VoIP e TV</b> com os Disquinhos da Claro, compre veículos, pule na cabeça dos rivais (Vivo, Robô Nio e Bluesman Tim) e desbloqueie a Fase 2 nos postes de Fibra!
+            </p>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:12px;">
+                <button class="cta-btn cta-green" onclick="openBriefing(1)">▶️ INICIAR FASE 1 (30 CASAS)</button>
+                <button class="cta-btn cta-red" id="start-btn-f2" onclick="openBriefing(2)">🔒 FASE 2 (30 POSTES FIBRA)</button>
             </div>
-            <button class="btn" style="background:#334155; width:100%;" onclick="openGuide()">❓ GUIA DOS ÍCONES (O QUE PEGAR VS FUJIR)</button>
+            <button class="cta-btn cta-gray" style="width:100%; font-size:12px; padding:8px;" onclick="openGuide()">📋 VER GUIA DE ÍCONES (O QUE PEGAR VS FUGIR)</button>
         </div>
     </div>
 
-    <!-- Tela de Briefing -->
-    <div id="screen-briefing" class="screen-overlay" style="display: none;">
-        <div style="background: rgba(15,23,42,0.95); padding: 25px; border-radius: 16px; border: 2px solid #16a34a; max-width: 550px; width: 100%; text-align: left;">
-            <h2 id="briefing-title" style="color: #4ade80; font-size: 18px; margin-bottom: 10px;">📋 BRIEFING</h2>
-            <p id="briefing-desc" style="font-size: 13px; color: #e2e8f0; line-height: 1.5; margin-bottom: 15px;"></p>
-            <div style="background: #1e293b; padding: 10px; border-radius: 8px; font-size: 12px; color: #94a3b8; margin-bottom: 20px;">
-                ⭐ <b>Regra:</b> Acertar dá +10% Energia e +15s. Errar ou esbarrar tira -15% Energia. Pule nos rivais para ganhar +R$35!
+    <!-- Modal Briefing -->
+    <div class="modal-backdrop" id="modal-briefing" style="display:none;">
+        <div class="modal-card">
+            <h2 id="brief-title" style="color:#4ade80; font-size:18px; margin-bottom:8px;"></h2>
+            <div id="brief-body" style="font-size:13px; color:#e2e8f0; line-height:1.5; margin-bottom:12px;"></div>
+            <div style="background:rgba(15,23,42,0.85); border:1px solid #38bdf8; border-radius:10px; padding:9px 12px; font-size:12px; color:#bae6fd; margin-bottom:14px;">
+                ⚡ <b>Balanço de Energia:</b> Cada acerto recupera <b>+10% Energia</b> e dá <b>+15s</b>. Cada erro ou esbarrão consome <b>-15% Energia</b>. Pular no ar + Atirar = <b>Tiro Reto Multi-Casas!</b>
             </div>
-            <button class="btn btn-green" style="width: 100%; padding: 12px; font-size: 15px;" onclick="launchPhaseFromBriefing()">🚀 COMEÇAR EXPEDIENTE AGORA!</button>
+            <button class="cta-btn cta-green" style="width:100%;" onclick="startPhaseNow()">🚀 COMEÇAR EXPEDIENTE AGORA!</button>
         </div>
     </div>
 
-    <!-- Guia de Ícones -->
-    <div id="screen-guide" class="screen-overlay" style="display: none;">
-        <div style="background: rgba(15,23,42,0.95); padding: 20px; border-radius: 16px; border: 2px solid #eab308; max-width: 500px; width: 100%; text-align: left; max-height: 85vh; overflow-y: auto;">
-            <h2 style="color: #facc15; font-size: 16px; margin-bottom: 10px;">📖 GUIA DOS ÍCONES E RECOMPENSAS</h2>
-            <div style="font-size: 12px; line-height: 1.6; color: #cbd5e1;">
-                <p style="color: #4ade80; font-weight: bold;">✅ O QUE PEGAR (Borda Verde):</p>
-                <p>• 💵 <b>Dinheirinho (+R$ 30):</b> Para comprar Patinete (R$50), Bike (R$120) ou Motinha (R$250).</p>
-                <p>• 🟡 <b>Super Disco (8s):</b> Aumenta o tamanho e o alcance do tiro em diagonal.</p>
-                <p>• ⚡ <b>Turbo Dourado:</b> Disparo veloz e recupera +10% de Energia.</p>
-                <p style="color: #f87171; font-weight: bold; margin-top: 8px;">❌ DO QUE FUGIR / PULAR (Borda Vermelha):</p>
-                <p>• 🟣 <b>Mini Sinal / 🐢 Sinal Lento:</b> Encolhem seu tiro e tiram -15% de Energia.</p>
-                <p>• 👾 <b>Bonecos Rivais (Vivo, Nio, Tim):</b> Pule na cabeça deles (⬆️) para destruí-los (+R$35)!</p>
+    <!-- Modal Guia de Ícones -->
+    <div class="modal-backdrop" id="modal-guide" style="display:none;">
+        <div class="modal-card">
+            <h2 style="color:#facc15; font-size:17px; margin-bottom:8px;">📖 GUIA DE ÍCONES E SURPRESINHAS</h2>
+            <div style="font-size:12.5px; line-height:1.55; color:#e2e8f0;">
+                <p style="color:#4ade80; font-weight:800;">✅ PEGUE SEMPRE (Borda Verde):</p>
+                <p>• 💵 <b>Dinheirinho (+R$ 30):</b> Use no topo para comprar Patinete (R$50), Bike (R$120) ou Motinha (R$250).</p>
+                <p>• 🟡 <b>Super Disco Gigante (8s):</b> Tiro maior e alcance longo em diagonal sem cair.</p>
+                <p>• ⚡ <b>Turbo Dourado (+10% Energia):</b> Disparo ultra rápido e recarrega energia.</p>
+                <p style="color:#f87171; font-weight:800; margin-top:8px;">❌ FUJA OU PULE POR CIMA (Borda Vermelha):</p>
+                <p>• 🟣 <b>Mini Sinal / 🐢 Sinal Lento:</b> Encolhem o alcance do disco e tiram <b>-15% de Energia</b>.</p>
+                <p>• 👾 <b>Rivais (Boneco Vivo, Robô Nio e Bluesman Tim):</b> Não bata de frente! <b>Pule em cima deles (⬆️)</b> para amassá-los e ganhar <b>+R$ 35</b> e <b>+10% de Energia</b>!</p>
             </div>
-            <button class="btn" style="width: 100%; margin-top: 15px; background: #475569;" onclick="closeGuide()">VOLTAR AO MENU</button>
+            <button class="cta-btn cta-blue" style="width:100%; margin-top:12px;" onclick="closeGuide()">ENTENDI, VOLTAR</button>
         </div>
     </div>
 
-    <!-- Tela Game Over -->
-    <div id="screen-gameover" class="screen-overlay" style="display: none;">
-        <div style="background: rgba(15,23,42,0.95); padding: 25px; border-radius: 16px; border: 2px solid #ef4444; max-width: 450px; width: 100%;">
-            <h2 id="go-title" style="color: #ef4444; font-size: 20px; margin-bottom: 10px;">FIM DE EXPEDIENTE</h2>
-            <p id="go-text" style="font-size: 13px; color: #cbd5e1; margin-bottom: 20px;"></p>
-            <button class="btn btn-green" style="width: 100%; padding: 12px;" onclick="backToMenu()">🔄 VOLTAR AO MENU</button>
+    <!-- Modal Fim de Jogo / Vitória -->
+    <div class="modal-backdrop" id="modal-end" style="display:none;">
+        <div class="modal-card" style="text-align:center;">
+            <h2 id="end-title" style="font-size:22px; margin-bottom:8px;"></h2>
+            <p id="end-desc" style="font-size:13.5px; color:#cbd5e1; margin-bottom:16px; white-space:pre-line;"></p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button class="cta-btn cta-green" onclick="openBriefing(currentPhase)">🔄 JOGAR NOVAMENTE</button>
+                <button class="cta-btn cta-gray" onclick="backToStart()">🏠 MENU INICIAL</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// Estado Geral do Jogo
+let state = 'START';
+let currentPhase = 1;
+let phase2Unlocked = false;
+const GOAL_TARGET = 30;
+
+let timeLeft = 90;
+let money = 0;
+let energy = 100;
+let score = 0;
+let solvedCount = 0;
+
+let powerUp = { giant: 0, gold: 0, mini: 0, slow: 0 };
+
+const motora = {
+    x: 130, y: 0, w: 54, h: 86,
+    vx: 0, vy: 0, facing: 1,
+    jumping: false, jumpsLeft: 2,
+    onWire: false,
+    vehicle: null, // 'patinete', 'bike', 'motinha'
+    expr: 'neutral', exprTimer: 0,
+    walkCycle: 0
+};
+
+let keys = { left: false, right: false, up: false, down: false };
+let houses = [], poles = [], projectiles = [], rivals = [], surprises = [], popups = [], clouds = [];
+
+function getGroundY() { return Math.floor(canvas.height * 0.77); }
+function getWireY() { return Math.floor(canvas.height * 0.34); }
+
+function initClouds() {
+    clouds = [];
+    for (let i = 0; i < 18; i++) {
+        clouds.push({ x: i * 320 + Math.random() * 120, y: 55 + (i % 3) * 35, r: 24 + (i % 2) * 10 });
     }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+}
 
-    let gameState = 'START';
-    let currentPhase = 1;
-    let unlockedPhase2 = false;
-    let score = 0, money = 0, energy = 100, timeLeft = 90, progressCount = 0;
-    const targetGoal = 30;
+function buildPhaseWorld(phase) {
+    initClouds();
+    const gY = getGroundY();
+    const wY = getWireY();
+    motora.x = 120;
+    motora.y = gY - motora.h;
+    motora.vx = 0; motora.vy = 0;
+    motora.jumping = false; motora.jumpsLeft = 2; motora.onWire = false;
+    projectiles = []; surprises = []; popups = []; rivals = [];
+    houses = []; poles = [];
 
-    let motora = {
-        x: 100, y: 0, w: 45, h: 65, vx: 0, vy: 0, speed: 4.5,
-        groundY: 0, jumping: false, jumpCount: 0, facing: 1,
-        vehicle: null, vehicleTimer: 0, expression: 'neutral', exprTimer: 0,
-        onWire: false
-    };
+    const types = ['Internet', 'VoIP', 'TV'];
+    const houseColors = [
+        { wall: '#f5d0fe', roof: '#1d4ed8' },
+        { wall: '#fef3c7', roof: '#dc2626' },
+        { wall: '#e0f2fe', roof: '#b91c1c' },
+        { wall: '#dcfce7', roof: '#7c3aed' }
+    ];
 
-    let keys = { left: false, right: false, up: false, down: false };
-    let projectiles = [], houses = [], wires = [], surprises = [], rivals = [];
+    for (let i = 0; i < 38; i++) {
+        const hx = 340 + i * 330;
+        const hc = houseColors[i % houseColors.length];
+        houses.push({
+            x: hx, y: gY - 135, w: 122, h: 135,
+            wall: hc.wall, roof: hc.roof,
+            issue: types[i % 3],
+            solved: false
+        });
 
-    function initLevel() {
-        motora.x = 80;
-        motora.groundY = canvas.height * 0.6;
-        motora.y = motora.groundY - motora.h;
-        motora.vy = 0;
-        motora.onWire = false;
-        projectiles = []; surprises = []; rivals = []; houses = []; wires = [];
-
-        if (currentPhase === 1) {
-            for (let i = 0; i < 35; i++) {
-                houses.push({
-                    x: 300 + i * 280, y: canvas.height * 0.6 - 110,
-                    w: 90, h: 110, type: i % 3 === 0 ? 'Internet' : i % 3 === 1 ? 'VoIP' : 'TV',
-                    solved: false
-                });
-            }
-        } else {
-            for (let i = 0; i < 35; i++) {
-                wires.push({
-                    x: 350 + i * 300, poleY: canvas.height * 0.35,
-                    hasWire: (i % 4 !== 3), connected: false
-                });
-            }
-        }
-
-        for (let i = 0; i < 6; i++) {
-            rivals.push({
-                x: 600 + i * 500, y: canvas.height * 0.6 - 45,
-                w: 40, h: 45, type: i % 3 === 0 ? 'vivo' : i % 3 === 1 ? 'nio' : 'tim',
-                vx: -1.5, alive: true
+        if (phase === 2) {
+            // A cada 4 postes, 1 tem vão sem fiação aérea para obrigar a descer
+            const hasAerialWire = (i % 4 !== 2);
+            poles.push({
+                x: hx - 70, y: wY, groundY: gY,
+                hasWireToNext: hasAerialWire,
+                connected: false
             });
         }
     }
 
-    function startBriefing(phase) {
-        if (phase === 2 && !unlockedPhase2) {
-            alert("🔒 Conclua a Fase 1 para desbloquear a Rede Fibra nas Alturas!");
-            return;
-        }
-        currentPhase = phase;
-        document.getElementById('screen-start').style.display = 'none';
-        document.getElementById('screen-briefing').style.display = 'flex';
-        let title = document.getElementById('briefing-title');
-        let desc = document.getElementById('briefing-desc');
-
-        if (phase === 1) {
-            title.innerText = "📋 FASE 1: DISQUINHOS FILTRO VT";
-            desc.innerHTML = "Ajude clientes com problemas de <b>Internet, VoIP e TV</b> atirando os <b>Disquinhos da Claro</b>.<br><br>• Acertar casinha: +15s, +10% Energia e +1 objetivo.<br>• Pular nos rivais: +R$ 35 e +35% Energia!<br>• Meta: 30 casinhas consertadas.";
-        } else {
-            title.innerText = "📋 FASE 2: REDE FIBRA NAS ALTURAS";
-            desc.innerHTML = "Interligue os <b>Postes e Caixas CTO</b> com cabos de fibra óptica. Use as <b>escadas amarelas (⬆️)</b> para subir e caminhar pela fiação aérea com 100% de segurança!<br><br>• Meta: 30 conexões concluídas.";
-        }
-    }
-
-    function launchPhaseFromBriefing() {
-        document.getElementById('screen-briefing').style.display = 'none';
-        gameState = 'PLAYING';
-        score = 0; money = 0; energy = 100; timeLeft = 90; progressCount = 0;
-        initLevel();
-    }
-
-    function switchPhase(phase) {
-        if (phase === 2 && !unlockedPhase2) {
-            alert("🔒 Fase 2 bloqueada! Complete a Fase 1 primeiro.");
-            return;
-        }
-        currentPhase = phase;
-        progressCount = 0;
-        initLevel();
-    }
-
-    function togglePause() {
-        if (gameState === 'PLAYING') gameState = 'PAUSED';
-        else if (gameState === 'PAUSED') gameState = 'PLAYING';
-    }
-
-    function backToMenu() {
-        gameState = 'START';
-        document.getElementById('screen-gameover').style.display = 'none';
-        document.getElementById('screen-start').style.display = 'flex';
-    }
-
-    function openGuide() { document.getElementById('screen-guide').style.display = 'flex'; }
-    function closeGuide() { document.getElementById('screen-guide').style.display = 'none'; }
-
-    function handleInput(dir, isDown) { keys[dir] = isDown; }
-
-    function doJump() {
-        if (gameState !== 'PLAYING') return;
-        if (motora.onWire) { motora.onWire = false; motora.vy = -8; return; }
-        if (!motora.jumping) { motora.vy = -12.5; motora.jumping = true; motora.jumpCount = 1; }
-        else if (motora.jumpCount === 1) { motora.vy = -11; motora.jumpCount = 2; }
-    }
-
-    function doAction() {
-        if (gameState !== 'PLAYING') return;
-        let pSpeed = motora.jumping ? 14 : 9;
-        let isStraight = motora.jumping || motora.onWire;
-        projectiles.push({
-            x: motora.x + (motora.facing > 0 ? motora.w : -10),
-            y: motora.y + motora.h / 2,
-            vx: motora.facing * pSpeed, vy: isStraight ? 0 : -3.5,
-            straight: isStraight, radius: 12, type: currentPhase === 1 ? 'disco' : 'cabo'
+    // Spawn inicial de rivais (mais espaçados no começo, mais intensos perto dos 30)
+    const rivalTypes = ['vivo', 'nio', 'tim'];
+    for (let i = 0; i < 28; i++) {
+        const spacing = i < 8 ? 520 : (i < 18 ? 390 : 290);
+        rivals.push({
+            x: 620 + i * spacing,
+            y: gY - 58, w: 46, h: 58,
+            type: rivalTypes[i % 3],
+            vx: -(1.25 + (i > 15 ? 0.65 : 0)),
+            alive: true, squishedTimer: 0
         });
     }
+}
 
-    function buyVehicle(type) {
-        if (type === 'patinete' && money >= 50) { money -= 50; motora.vehicle = 'patinete'; motora.vehicleTimer = 400; }
-        else if (type === 'bike' && money >= 120) { money -= 120; motora.vehicle = 'bike'; motora.vehicleTimer = 600; }
-        else if (type === 'motinha' && money >= 250) { money -= 250; motora.vehicle = 'motinha'; motora.vehicleTimer = 900; }
+function addPopup(x, y, text, color = '#fde047') {
+    popups.push({ x, y, text, color, life: 55 });
+}
+
+function openBriefing(phase) {
+    if (phase === 2 && !phase2Unlocked) {
+        alert('🔒 Complete primeiro as 30 casinhas da Fase 1 para desbloquear a Fase 2 (Rede Fibra nas Alturas)!');
+        return;
+    }
+    currentPhase = phase;
+    document.getElementById('modal-start').style.display = 'none';
+    document.getElementById('modal-end').style.display = 'none';
+    document.getElementById('modal-briefing').style.display = 'flex';
+
+    const t = document.getElementById('brief-title');
+    const b = document.getElementById('brief-body');
+    if (phase === 1) {
+        t.innerText = '📋 FASE 1: DISQUINHOS FILTRO VT (META: 30 CASAS)';
+        b.innerHTML = '• Corra pelas casinhas e dispare o <b>Disco Vermelho Filtro VT</b> nos alertas de <b>Internet, VoIP e TV</b>.<br>• <b>Física do Disco:</b> No chão o disco faz uma parábola curta. Se você <b>Pular (⬆️) + Atirar (🎧)</b> no ar, o tiro sai em <b>Linha Reta Perfurante</b> acertando mais de uma casinha!<br>• <b>Pise nos Rivais:</b> Pule na cabeça do Boneco Vivo, Robô Nio e Bluesman Tim para ganhar <b>+R$ 35</b> e <b>+10% Energia</b>!';
+        document.getElementById('lbl-shoot-sub').innerText = 'DISCO VT';
+    } else {
+        t.innerText = '📋 FASE 2: REDE FIBRA NAS ALTURAS (META: 30 CONEXÕES)';
+        b.innerHTML = '• Lance <b>Cabos de Fibra Óptica</b> nas Caixas CTO dos postes e receptores das casas.<br>• <b>Escadas Amarelas (⬆️):</b> Suba nos postes para andar por cima dos fios imune aos rivais.<br>• <b>Atenção aos Vãos sem Fio (⚠️):</b> Alguns postes estão sem cabo aéreo! Desça pela escada (⬇️) antes de cair!';
+        document.getElementById('lbl-shoot-sub').innerText = 'CABO FIBRA';
+    }
+}
+
+function startPhaseNow() {
+    document.getElementById('modal-briefing').style.display = 'none';
+    timeLeft = 90;
+    energy = 100;
+    solvedCount = 0;
+    powerUp = { giant: 0, gold: 0, mini: 0, slow: 0 };
+    buildPhaseWorld(currentPhase);
+    state = 'PLAYING';
+}
+
+function trySwitchPhase(p) {
+    openBriefing(p);
+}
+
+function openGuide() { document.getElementById('modal-guide').style.display = 'flex'; }
+function closeGuide() { document.getElementById('modal-guide').style.display = 'none'; }
+function backToStart() {
+    state = 'START';
+    document.getElementById('modal-end').style.display = 'none';
+    document.getElementById('modal-start').style.display = 'flex';
+}
+
+function toggleFullScreen() {
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    } else if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+    }
+}
+
+function buyVehicle(type) {
+    const costs = { patinete: 50, bike: 120, motinha: 250 };
+    const names = { patinete: '🛴 Patinete VT', bike: '🚲 Bike Turbo', motinha: '🛵 Motinha Express' };
+    if (money >= costs[type]) {
+        money -= costs[type];
+        motora.vehicle = type;
+        motora.expr = 'happy'; motora.exprTimer = 80;
+        document.getElementById('hud-equip').innerText = names[type] + ' (Escudo Ativo)';
+        addPopup(motora.x, motora.y - 20, 'COMPROU ' + names[type].toUpperCase() + '!', '#4ade80');
+    } else {
+        addPopup(motora.x, motora.y - 20, 'FALTA R$ PARA ' + type.toUpperCase(), '#f87171');
+    }
+}
+
+let lastJumpTime = 0;
+function triggerJump() {
+    const now = performance.now();
+    if (now - lastJumpTime < 90) return;
+    lastJumpTime = now;
+    if (state !== 'PLAYING') return;
+
+    if (motora.onWire) {
+        motora.vy = -10.5;
+        motora.jumping = true;
+        return;
+    }
+    if (motora.jumpsLeft > 0) {
+        const boost = motora.vehicle === 'motinha' ? -15 : (motora.vehicle === 'bike' ? -14 : -13);
+        motora.vy = boost;
+        motora.jumping = true;
+        motora.jumpsLeft--;
+    }
+}
+
+let lastShootTime = 0;
+function triggerShoot() {
+    const now = performance.now();
+    if (now - lastShootTime < 140) return;
+    lastShootTime = now;
+    if (state !== 'PLAYING') return;
+
+    const isAirShot = motora.jumping && !motora.onWire;
+    const isBig = powerUp.giant > 0 || powerUp.gold > 0;
+    const isMini = powerUp.mini > 0;
+    const isSlow = powerUp.slow > 0;
+
+    let baseSpeed = isSlow ? 7.5 : (powerUp.gold > 0 ? 15.5 : 11.5);
+    let radius = isBig ? 23 : (isMini ? 9 : 15);
+
+    // Tiro no ar = linha reta horizontal multi-casas; Super Disco = diagonal longa; Normal = parábola
+    let vy = 0;
+    let gravity = 0;
+    let pierce = 1;
+
+    if (isAirShot) {
+        vy = 0;
+        gravity = 0;
+        pierce = 3; // acerta até 3 casinhas em linha reta!
+        addPopup(motora.x + 25, motora.y - 10, '⚡ TIRO RETO MULTI-CASAS!', '#38bdf8');
+    } else if (isBig) {
+        vy = -2.6;
+        gravity = 0.03;
+        pierce = 2;
+    } else {
+        vy = isMini ? -4.2 : -5.8;
+        gravity = isMini ? 0.36 : 0.24;
+        pierce = 1;
     }
 
-    function updateGame() {
-        if (gameState !== 'PLAYING') return;
-        timeLeft -= 1/60;
-        if (timeLeft <= 0 || energy <= 0) { endGame(false, "Expediente encerrado!"); return; }
+    projectiles.push({
+        x: motora.x + (motora.facing > 0 ? motora.w : 0),
+        y: motora.y + 38,
+        vx: motora.facing * baseSpeed,
+        vy: vy,
+        gravity: gravity,
+        r: radius,
+        pierce: pierce,
+        hits: 0,
+        gold: powerUp.gold > 0,
+        phase: currentPhase
+    });
+}
 
-        if (motora.vehicleTimer > 0) { motora.vehicleTimer--; if (motora.vehicleTimer === 0) motora.vehicle = null; }
-        if (motora.exprTimer > 0) { motora.exprTimer--; if (motora.exprTimer === 0) motora.expression = 'neutral'; }
+function registerSuccess(x, y, label) {
+    solvedCount++;
+    timeLeft += 15;
+    money += 20;
+    score += 250;
+    energy = Math.min(100, energy + 10);
+    motora.expr = 'happy';
+    motora.exprTimer = 85;
+    addPopup(x, y, label + ' (+15s | +10%⚡)', '#4ade80');
 
-        let currentSpeed = motora.speed + (motora.vehicle ? 2 : 0);
-        if (keys.left) { motora.vx = -currentSpeed; motora.facing = -1; }
-        else if (keys.right) { motora.vx = currentSpeed; motora.facing = 1; }
-        else { motora.vx = 0; }
+    // Soltar surpresinha do aparelho
+    const types = ['money', 'giant', 'gold', 'mini', 'slow'];
+    const st = types[Math.floor(Math.random() * types.length)];
+    surprises.push({
+        x: x + 20, y: y + 20,
+        vx: 1.5, vy: -5.5,
+        type: st,
+        good: (st === 'money' || st === 'giant' || st === 'gold')
+    });
 
-        if (motora.onWire) {
-            motora.x += motora.vx;
-            let wireUnder = wires.find(w => Math.abs(w.x - motora.x) < 40);
-            if (wireUnder && !wireUnder.hasWire) { motora.onWire = false; motora.vy = 2; }
-            if (keys.down) { motora.onWire = false; motora.vy = 4; }
+    if (solvedCount >= GOAL_TARGET) {
+        if (currentPhase === 1) {
+            phase2Unlocked = true;
+            document.getElementById('btn-top-f2').innerText = 'F2 🔌';
+            document.getElementById('start-btn-f2').innerText = '▶️ FASE 2 (30 POSTES FIBRA)';
+            state = 'END';
+            document.getElementById('modal-end').style.display = 'flex';
+            document.getElementById('end-title').style.color = '#4ade80';
+            document.getElementById('end-title').innerText = '🎉 FASE 1 CONCLUÍDA (30/30)!';
+            document.getElementById('end-desc').innerText = 'Parabéns, Motora! Você resolveu as 30 reclamações com os Disquinhos Filtro VT!\nAgora a Fase 2 (Rede Fibra nas Alturas) está liberada!';
+            currentPhase = 2;
         } else {
-            motora.x += motora.vx;
-            motora.vy += 0.55;
-            motora.y += motora.vy;
+            state = 'END';
+            document.getElementById('modal-end').style.display = 'flex';
+            document.getElementById('end-title').style.color = '#facc15';
+            document.getElementById('end-title').innerText = '🏆 ZEROU! CAMPEÃO BRASILCENTER!';
+            document.getElementById('end-desc').innerText = `Você completou as Fases 1 e 2 com excelência!\nDinheirinho acumulado: R$ ${money} | Pontos: ${score}`;
+        }
+    }
+}
 
-            if (motora.y >= motora.groundY - motora.h) {
-                motora.y = motora.groundY - motora.h;
-                motora.vy = 0; motora.jumping = false; motora.jumpCount = 0;
-            }
+function registerError(x, y, reason) {
+    energy = Math.max(0, energy - 15);
+    motora.expr = 'sad';
+    motora.exprTimer = 85;
+    addPopup(x, y, reason + ' (-15%⚡)', '#f87171');
+    if (energy <= 0) {
+        state = 'END';
+        document.getElementById('modal-end').style.display = 'flex';
+        document.getElementById('end-title').style.color = '#ef4444';
+        document.getElementById('end-title').innerText = '⚠️ ENERGIA ESGOTADA (0%)!';
+        document.getElementById('end-desc').innerText = 'O Motora ficou sem energia após muitos erros seguidos.\nRecarregue o Stanley VT e tente novamente!';
+    }
+}
 
-            if (currentPhase === 2 && keys.up) {
-                let nearPole = wires.find(w => Math.abs(w.x - motora.x) < 30 && w.hasWire);
-                if (nearPole) { motora.onWire = true; motora.y = nearPole.poleY - motora.h; motora.vy = 0; }
+function isWireSupportedAt(x) {
+    for (let p of poles) {
+        if (x >= p.x - 18 && x <= p.x + 330) {
+            return p.hasWireToNext;
+        }
+    }
+    return false;
+}
+
+function update() {
+    if (state !== 'PLAYING') return;
+
+    const gY = getGroundY();
+    const wY = getWireY();
+
+    timeLeft -= 1 / 60;
+    if (timeLeft <= 0) {
+        state = 'END';
+        document.getElementById('modal-end').style.display = 'flex';
+        document.getElementById('end-title').style.color = '#ef4444';
+        document.getElementById('end-title').innerText = '⏰ TEMPO ESGOTADO!';
+        document.getElementById('end-desc').innerText = `Meta atingida: ${solvedCount}/${GOAL_TARGET}.\nAcerte as casinhas para ganhar +15 segundos em cada alvo!`;
+        return;
+    }
+
+    if (motora.exprTimer > 0) {
+        motora.exprTimer--;
+        if (motora.exprTimer === 0) motora.expr = 'neutral';
+    }
+    for (let k in powerUp) { if (powerUp[k] > 0) powerUp[k]--; }
+
+    // Velocidade conforme equipamento
+    let spd = 4.6;
+    if (motora.vehicle === 'patinete') spd = 6.2;
+    if (motora.vehicle === 'bike') spd = 7.4;
+    if (motora.vehicle === 'motinha') spd = 8.8;
+
+    if (keys.left) { motora.vx = -spd; motora.facing = -1; motora.walkCycle += 0.22; }
+    else if (keys.right) { motora.vx = spd; motora.facing = 1; motora.walkCycle += 0.22; }
+    else { motora.vx = 0; }
+
+    motora.x = Math.max(40, motora.x + motora.vx);
+
+    // Fase 2: Subir escada amarela APENAS quando segurar Cima perto do poste
+    if (currentPhase === 2 && keys.up && !motora.onWire) {
+        const nearPole = poles.find(p => Math.abs((motora.x + motora.w / 2) - p.x) < 34);
+        if (nearPole) {
+            motora.y -= 5.2;
+            motora.vy = 0;
+            if (motora.y + motora.h <= wY + 6) {
+                motora.y = wY - motora.h;
+                motora.onWire = true;
+                motora.jumping = false;
+                motora.jumpsLeft = 2;
+                addPopup(motora.x, motora.y, '🪜 SUBIU NO FIO!', '#38bdf8');
             }
         }
+    }
 
-        for (let i = projectiles.length - 1; i >= 0; i--) {
-            let p = projectiles[i];
-            p.x += p.vx; p.y += p.vy;
-            if (!p.straight) p.vy += 0.25;
+    if (motora.onWire) {
+        if (keys.down) {
+            motora.onWire = false;
+            motora.vy = 3;
+        } else if (!isWireSupportedAt(motora.x + motora.w / 2)) {
+            motora.onWire = false;
+            motora.vy = 2;
+            addPopup(motora.x, motora.y, '⚠️ FIM DO FIO! CAIU!', '#fbbf24');
+        } else {
+            motora.y = wY - motora.h;
+            motora.vy = 0;
+        }
+    } else {
+        motora.vy += keys.down ? 0.95 : 0.56;
+        motora.y += motora.vy;
+        if (motora.y >= gY - motora.h) {
+            motora.y = gY - motora.h;
+            motora.vy = 0;
+            motora.jumping = false;
+            motora.jumpsLeft = 2;
+        }
+    }
 
-            let hit = false;
-            if (currentPhase === 1) {
-                houses.forEach(h => {
-                    if (!h.solved && p.x > h.x && p.x < h.x + h.w && p.y > h.y && p.y < h.y + h.h) {
-                        h.solved = true; hit = true; triggerSuccess();
-                    }
-                });
+    // Atualizar Projéteis
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const p = projectiles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+
+        // Verificar acerto nas casinhas
+        houses.forEach(h => {
+            if (!h.solved && p.x + p.r > h.x && p.x - p.r < h.x + h.w && p.y + p.r > h.y && p.y - p.r < h.y + h.h) {
+                h.solved = true;
+                p.hits++;
+                registerSuccess(h.x, h.y, p.hits > 1 ? `🔥 COMBO ${p.hits}x CASAS!` : '✅ SINAL 100% OK!');
+                if (p.hits > 1) money += 25;
+            }
+        });
+
+        // Fase 2: acertar Caixas CTO nos postes
+        if (currentPhase === 2) {
+            poles.forEach(pl => {
+                if (!pl.connected && Math.abs(p.x - pl.x) < 32 && Math.abs(p.y - pl.y) < 42) {
+                    pl.connected = true;
+                    p.hits++;
+                    registerSuccess(pl.x, pl.y, '🔌 FIBRA CTO LIGADA!');
+                }
+            });
+        }
+
+        if (p.hits >= p.pierce) {
+            projectiles.splice(i, 1);
+            continue;
+        }
+
+        if (p.y > gY || Math.abs(p.x - motora.x) > canvas.width * 0.95) {
+            if (p.hits === 0) {
+                registerError(p.x, Math.min(p.y, gY - 20), '❌ ERROU O ALVO');
+            }
+            projectiles.splice(i, 1);
+        }
+    }
+
+    // Atualizar Surpresinhas
+    for (let i = surprises.length - 1; i >= 0; i--) {
+        const s = surprises[i];
+        s.x += s.vx;
+        s.y += s.vy;
+        s.vy += 0.28;
+        if (s.y >= gY - 26) { s.y = gY - 26; s.vy = -3.8; }
+
+        if (Math.abs((motora.x + motora.w / 2) - s.x) < 36 && Math.abs((motora.y + motora.h / 2) - s.y) < 44) {
+            if (s.type === 'money') {
+                money += 30;
+                motora.expr = 'happy'; motora.exprTimer = 70;
+                addPopup(s.x, s.y, '💵 +R$ 30!', '#4ade80');
+            } else if (s.type === 'giant') {
+                powerUp.giant = 480;
+                motora.expr = 'happy'; motora.exprTimer = 70;
+                addPopup(s.x, s.y, '🟡 SUPER DISCO GIGANTE!', '#fde047');
+            } else if (s.type === 'gold') {
+                powerUp.gold = 480;
+                energy = Math.min(100, energy + 10);
+                motora.expr = 'happy'; motora.exprTimer = 70;
+                addPopup(s.x, s.y, '⚡ TURBO DOURADO (+10%⚡)!', '#facc15');
+            } else if (s.type === 'mini') {
+                powerUp.mini = 360;
+                registerError(s.x, s.y, '🟣 PEGADINHA: MINI DISCO');
+            } else if (s.type === 'slow') {
+                powerUp.slow = 360;
+                registerError(s.x, s.y, '🐢 PEGADINHA: DISCO LENTO');
+            }
+            surprises.splice(i, 1);
+        }
+    }
+
+    // Atualizar Rivais (Vivo, Robô Nio, Bluesman Tim)
+    rivals.forEach(r => {
+        if (!r.alive) {
+            if (r.squishedTimer > 0) r.squishedTimer--;
+            return;
+        }
+        r.x += r.vx;
+
+        if (!motora.onWire &&
+            motora.x + motora.w - 8 > r.x && motora.x + 8 < r.x + r.w &&
+            motora.y + motora.h > r.y && motora.y < r.y + r.h) {
+
+            // Pisar por cima do rival para eliminar e ganhar R$ 35 + 10% Energia
+            if (motora.vy > 0 && (motora.y + motora.h - motora.vy) <= r.y + 24) {
+                r.alive = false;
+                r.squishedTimer = 45;
+                motora.vy = -11.5;
+                motora.jumping = true;
+                motora.jumpsLeft = 1;
+                money += 35;
+                timeLeft += 5;
+                score += 200;
+                energy = Math.min(100, energy + 10);
+                motora.expr = 'happy'; motora.exprTimer = 85;
+                addPopup(r.x, r.y - 10, '💥 AMASSOU RIVAL! +R$35 | +10%⚡', '#4ade80');
             } else {
-                wires.forEach(w => {
-                    if (w.hasWire && !w.connected && Math.abs(p.x - w.x) < 30) {
-                        w.connected = true; hit = true; triggerSuccess();
-                    }
-                });
-            }
-
-            if (hit || p.x > motora.x + 800 || p.x < motora.x - 800 || p.y > canvas.height) {
-                if (!hit) triggerError();
-                projectiles.splice(i, 1);
-            }
-        }
-
-        rivals.forEach(r => {
-            if (!r.alive) return;
-            r.x += r.vx;
-            if (Math.abs(motora.x - r.x) < 35 && Math.abs(motora.y - r.y) < 45 && !motora.onWire) {
-                if (motora.vy > 0 && motora.y + motora.h - 15 <= r.y) {
-                    r.alive = false; motora.vy = -9; money += 35;
-                    energy = Math.min(100, energy + 10); timeLeft += 5; triggerSuccess();
+                // Esbarrão lateral
+                r.alive = false;
+                if (motora.vehicle) {
+                    const lost = motora.vehicle.toUpperCase();
+                    motora.vehicle = null;
+                    document.getElementById('hud-equip').innerText = '👟 Tênis Preto Original';
+                    addPopup(motora.x, motora.y, `🛡️ ${lost} PROTEGEU VOCÊ!`, '#38bdf8');
                 } else {
-                    if (motora.vehicle) motora.vehicle = null;
-                    else { energy -= 15; triggerError(); }
-                    motora.x -= 40;
+                    timeLeft = Math.max(1, timeLeft - 5);
+                    registerError(motora.x, motora.y, '💥 ESBARROU NO RIVAL');
                 }
             }
-        });
+        }
+    });
+
+    // Atualizar Popups
+    for (let i = popups.length - 1; i >= 0; i--) {
+        popups[i].y -= 0.7;
+        popups[i].life--;
+        if (popups[i].life <= 0) popups.splice(i, 1);
     }
 
-    function triggerSuccess() {
-        score += 200; progressCount++; timeLeft += 15;
-        energy = Math.min(100, energy + 10);
-        motora.expression = 'happy'; motora.exprTimer = 90;
+    // Atualizar HUD
+    document.getElementById('hud-time').innerText = Math.max(0, Math.ceil(timeLeft));
+    document.getElementById('hud-money').innerText = money;
+    document.getElementById('hud-energy-txt').innerText = Math.round(energy) + '%';
+    const eBar = document.getElementById('hud-energy-bar');
+    eBar.style.width = energy + '%';
+    eBar.style.background = energy > 55 ? 'linear-gradient(90deg,#84cc16,#38bdf8)' : (energy > 25 ? '#facc15' : '#ef4444');
 
-        if (progressCount >= targetGoal) {
-            if (currentPhase === 1) {
-                unlockedPhase2 = true;
-                document.getElementById('btn-f2-top').innerText = "F2 🔌";
-                document.getElementById('menu-btn-f2').innerText = "🚀 INICIAR FASE 2 (FIBRA)";
-                alert("🎉 Fase 1 Concluída! Fase 2 Desbloqueada!");
-                switchPhase(2);
-            } else {
-                endGame(true, "Parabéns! Missão cumprida na BrasilCenter!");
+    const intensity = solvedCount < 10 ? 'Ritmo Calmo' : (solvedCount < 20 ? 'Pico de Chamadas' : 'Plantão Extremo VT');
+    document.getElementById('hud-mission').innerText = `Fase ${currentPhase} (${solvedCount}/${GOAL_TARGET} • ${intensity}): Pule + Atire p/ Tiro Reto ou pise nos rivais (+R$35)!`;
+
+    document.getElementById('btn-buy-patinete').classList.toggle('shop-locked', money < 50);
+    document.getElementById('btn-buy-bike').classList.toggle('shop-locked', money < 120);
+    document.getElementById('btn-buy-motinha').classList.toggle('shop-locked', money < 250);
+}
+
+// Funções Auxiliares de Desenho Polido
+function roundRectPath(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
+function drawHousePolished(h) {
+    // Sombra e Parede
+    ctx.fillStyle = h.wall;
+    roundRectPath(h.x, h.y + 36, h.w, h.h - 36, 6);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(15,23,42,0.25)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Telhado triangular vibrante (igual ao print)
+    ctx.fillStyle = h.roof;
+    ctx.beginPath();
+    ctx.moveTo(h.x - 14, h.y + 38);
+    ctx.lineTo(h.x + h.w / 2, h.y);
+    ctx.lineTo(h.x + h.w + 14, h.y + 38);
+    ctx.closePath();
+    ctx.fill();
+
+    // Porta de madeira com maçaneta dourada
+    ctx.fillStyle = '#78350f';
+    roundRectPath(h.x + 14, h.y + 72, 30, h.h - 72, 4);
+    ctx.fill();
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath(); ctx.arc(h.x + 38, h.y + 104, 3, 0, Math.PI * 2); ctx.fill();
+
+    // Janela azul-clara com carinha (igual ao print!)
+    ctx.fillStyle = '#bae6fd';
+    roundRectPath(h.x + 60, h.y + 66, 44, 42, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#7dd3fc'; ctx.lineWidth = 2; ctx.stroke();
+
+    // Carinha dentro da janela
+    const cx = h.x + 82, cy = h.y + 87;
+    ctx.fillStyle = '#facc15';
+    ctx.beginPath(); ctx.arc(cx, cy, 13, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath(); ctx.arc(cx - 4, cy - 3, 2, 0, Math.PI * 2); ctx.arc(cx + 4, cy - 3, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (h.solved) ctx.arc(cx, cy + 1, 5, 0, Math.PI);
+    else ctx.arc(cx, cy + 6, 5, Math.PI, 0);
+    ctx.stroke();
+
+    // Haste da Antena no telhado
+    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(h.x + h.w - 22, h.y + 22); ctx.lineTo(h.x + h.w - 22, h.y - 10); ctx.stroke();
+
+    // Placa Flutuante Acima da Casa (Igual ao Print: "✅ SINAL 100% OK!" ou Alerta)
+    const bx = h.x - 4, by = h.y - 42, bw = 132, bh = 30;
+    ctx.fillStyle = '#ffffff';
+    roundRectPath(bx, by, bw, bh, 10);
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = h.solved ? '#22c55e' : '#f59e0b';
+    ctx.stroke();
+
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillStyle = h.solved ? '#15803d' : '#dc2626';
+    ctx.fillText(h.solved ? '✅ SINAL 100% OK!' : `📡 ${h.issue}: ATIRE!`, bx + 10, by + 19);
+}
+
+function drawRivalPolished(r) {
+    const rx = r.x, ry = r.squishedTimer > 0 ? r.y + 32 : r.y;
+    const rh = r.squishedTimer > 0 ? 22 : r.h;
+
+    // Plaquinha superior com nome
+    ctx.fillStyle = r.type === 'vivo' ? '#7e22ce' : (r.type === 'nio' ? '#0284c7' : '#1d4ed8');
+    roundRectPath(rx - 10, ry - 24, 66, 18, 8);
+    ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 9.5px sans-serif';
+    const lbl = r.type === 'vivo' ? 'VIVO ROXO' : (r.type === 'nio' ? 'ROBÔ NIO' : 'BLUES TIM');
+    ctx.fillText(lbl, rx - 4, ry - 11);
+
+    if (r.type === 'nio') {
+        // Robô Nio Branco/Azul (igual ao print!)
+        ctx.fillStyle = '#e0f2fe';
+        roundRectPath(rx + 4, ry + 18, 38, rh - 18, 8); ctx.fill();
+        ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 2; ctx.stroke();
+        // Cabeça visor
+        ctx.fillStyle = '#f8fafc';
+        roundRectPath(rx + 2, ry, 42, 22, 8); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#0f172a';
+        roundRectPath(rx + 8, ry + 5, 30, 11, 5); ctx.fill();
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath(); ctx.arc(rx + 16, ry + 10, 3, 0, Math.PI * 2); ctx.arc(rx + 30, ry + 10, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#0284c7'; ctx.font = 'bold 9px sans-serif';
+        ctx.fillText('NIO', rx + 14, ry + 36);
+    } else if (r.type === 'vivo') {
+        // Bonequinho Roxo da Vivo
+        ctx.fillStyle = '#9333ea';
+        ctx.beginPath(); ctx.arc(rx + 23, ry + 14, 13, 0, Math.PI * 2); ctx.fill();
+        roundRectPath(rx + 7, ry + 24, 32, rh - 24, 10); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(rx + 18, ry + 12, 3, 0, Math.PI * 2); ctx.arc(rx + 28, ry + 12, 3, 0, Math.PI * 2); ctx.fill();
+    } else {
+        // Bluesman Tim com Chapéu e Óculos Escuros
+        ctx.fillStyle = '#1e3a8a';
+        roundRectPath(rx + 6, ry + 22, 34, rh - 22, 8); ctx.fill();
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath(); ctx.arc(rx + 23, ry + 14, 12, 0, Math.PI * 2); ctx.fill();
+        // Chapéu Blues
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(rx + 5, ry + 2, 36, 4);
+        ctx.fillRect(rx + 11, ry - 6, 24, 9);
+        // Saxofone dourado
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath(); ctx.arc(rx + 8, ry + 36, 6, 0, Math.PI * 2); ctx.fill();
+    }
+}
+
+function drawMotoraPolished() {
+    const mx = motora.x, my = motora.y;
+    ctx.save();
+
+    // Sombra no chão
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.beginPath(); ctx.ellipse(mx + 27, my + motora.h + 2, 22, 6, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Desenhar Veículo se equipado
+    if (motora.vehicle === 'patinete') {
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(mx + 2, my + motora.h - 6, 50, 6);
+        ctx.fillRect(mx + 42, my + 42, 4, 40);
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath(); ctx.arc(mx + 10, my + motora.h + 2, 7, 0, Math.PI * 2); ctx.arc(mx + 46, my + motora.h + 2, 7, 0, Math.PI * 2); ctx.fill();
+    } else if (motora.vehicle === 'bike') {
+        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(mx + 8, my + motora.h); ctx.lineTo(mx + 27, my + 55); ctx.lineTo(mx + 46, my + motora.h); ctx.stroke();
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath(); ctx.arc(mx + 8, my + motora.h + 2, 10, 0, Math.PI * 2); ctx.arc(mx + 46, my + motora.h + 2, 10, 0, Math.PI * 2); ctx.fill();
+    } else if (motora.vehicle === 'motinha') {
+        ctx.fillStyle = '#9333ea';
+        roundRectPath(mx - 4, my + 54, 62, 22, 10); ctx.fill();
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath(); ctx.arc(mx + 8, my + motora.h + 2, 11, 0, Math.PI * 2); ctx.arc(mx + 48, my + motora.h + 2, 11, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Calça Jeans e Tênis Pretos com Sola Branca (Fiel à Caixa e ao Print)
+    ctx.fillStyle = '#1e3a8a';
+    ctx.fillRect(mx + 14, my + 60, 11, 16);
+    ctx.fillRect(mx + 29, my + 60, 11, 16);
+
+    ctx.fillStyle = '#0f172a';
+    roundRectPath(mx + 10, my + 74, 16, 10, 4); ctx.fill();
+    roundRectPath(mx + 28, my + 74, 16, 10, 4); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(mx + 10, my + 82, 16, 3);
+    ctx.fillRect(mx + 28, my + 82, 16, 3);
+
+    // Camisa Polo Azul BrasilCenter
+    ctx.fillStyle = '#1d4ed8';
+    roundRectPath(mx + 9, my + 32, 36, 32, 8);
+    ctx.fill();
+
+    // Cordão e Crachá BrasilCenter
+    ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(mx + 21, my + 32); ctx.lineTo(mx + 27, my + 46); ctx.lineTo(mx + 33, my + 32); ctx.stroke();
+
+    // Braços segurando o Disco Filtro VT
+    ctx.fillStyle = '#c68642';
+    ctx.beginPath(); ctx.arc(mx + 9, my + 48, 6, 0, Math.PI * 2); ctx.arc(mx + 45, my + 48, 6, 0, Math.PI * 2); ctx.fill();
+
+    // Placa/Disco Redondo Vermelho "Filtro VT" no peito (Igual ao Print!)
+    ctx.fillStyle = currentPhase === 1 ? '#dc2626' : '#0284c7';
+    ctx.beginPath(); ctx.arc(mx + 27, my + 53, 15, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 7.5px sans-serif';
+    ctx.fillText(currentPhase === 1 ? 'Filtro VT' : 'Fibra VT', mx + 12, my + 54);
+
+    // Cabeça Careca Simpática do Motora
+    ctx.fillStyle = '#c68642';
+    ctx.beginPath(); ctx.arc(mx + 27, my + 18, 17, 0, Math.PI * 2); ctx.fill();
+
+    // Brilho suave na careca
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.beginPath(); ctx.ellipse(mx + 22, my + 8, 7, 3.5, -0.3, 0, Math.PI * 2); ctx.fill();
+
+    // Óculos de Armação Amarela (Marca registrada!)
+    ctx.strokeStyle = '#facc15'; ctx.lineWidth = 3;
+    roundRectPath(mx + 13, my + 12, 12, 9, 3); ctx.stroke();
+    roundRectPath(mx + 29, my + 12, 12, 9, 3); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(mx + 25, my + 16); ctx.lineTo(mx + 29, my + 16); ctx.stroke();
+
+    // Olhos
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath(); ctx.arc(mx + 19, my + 16.5, 2.2, 0, Math.PI * 2); ctx.arc(mx + 35, my + 16.5, 2.2, 0, Math.PI * 2); ctx.fill();
+
+    // Cavanhaque Vazado (Sem boca preta estranha!)
+    ctx.strokeStyle = '#334155'; ctx.lineWidth = 3.2;
+    roundRectPath(mx + 19, my + 23, 16, 10, 4);
+    ctx.stroke();
+
+    // Expressão da Boca dentro do Cavanhaque: Sorriso ao acertar, Choro com lágrimas ao errar!
+    if (motora.expr === 'happy') {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(mx + 27, my + 26.5, 5, 0, Math.PI); ctx.fill();
+    } else if (motora.expr === 'sad') {
+        ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(mx + 27, my + 30, 4, Math.PI, 0); ctx.stroke();
+        // Lágrimas azuis caindo
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath(); ctx.arc(mx + 15, my + 24, 2.5, 0, Math.PI * 2); ctx.arc(mx + 39, my + 24, 2.5, 0, Math.PI * 2); ctx.fill();
+    } else {
+        ctx.strokeStyle = '#5c2d16'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(mx + 27, my + 26, 4, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+function draw() {
+    const W = canvas.width, H = canvas.height;
+    const gY = getGroundY(), wY = getWireY();
+
+    // Céu Azul Vibrante estilo Desenho (Igual ao Print)
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, gY);
+    skyGrad.addColorStop(0, '#0284c7');
+    skyGrad.addColorStop(1, '#38bdf8');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, W, gY);
+
+    const camX = motora.x - W * 0.24;
+
+    ctx.save();
+    // Nuvens fofinhas
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    clouds.forEach(c => {
+        const cx = c.x - camX * 0.35;
+        ctx.beginPath();
+        ctx.arc(cx, c.y, c.r, 0, Math.PI * 2);
+        ctx.arc(cx + c.r * 0.8, c.y + 4, c.r * 0.75, 0, Math.PI * 2);
+        ctx.arc(cx - c.r * 0.8, c.y + 5, c.r * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    // Silhueta de prédios suaves ao fundo
+    ctx.fillStyle = 'rgba(186, 230, 253, 0.35)';
+    for (let i = 0; i < 25; i++) {
+        const bx = i * 220 - (camX * 0.5);
+        const bh = 90 + (i % 3) * 35;
+        ctx.fillRect(bx, gY - bh, 85, bh);
+    }
+
+    ctx.translate(-camX, 0);
+
+    // Calçada e Asfalto com Faixas Amarelas (Igual ao Print!)
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(camX - 50, gY - 6, W + 100, 8);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(camX - 50, gY, W + 100, H - gY);
+
+    ctx.fillStyle = '#facc15';
+    const startStripe = Math.floor((camX - 100) / 90) * 90;
+    for (let sx = startStripe; sx < camX + W + 150; sx += 90) {
+        roundRectPath(sx, gY + 26, 46, 8, 3);
+        ctx.fill();
+    }
+
+    // Desenhar Casinhas
+    houses.forEach(h => {
+        if (h.x + h.w > camX - 120 && h.x < camX + W + 120) {
+            drawHousePolished(h);
+        }
+    });
+
+    // Fase 2: Postes, Escadas Amarelas e Fiação com Vãos
+    if (currentPhase === 2) {
+        poles.forEach(pl => {
+            // Poste
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(pl.x - 6, pl.y - 20, 12, gY - (pl.y - 20));
+
+            // Escada Amarela
+            ctx.strokeStyle = '#facc15'; ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(pl.x - 10, pl.y); ctx.lineTo(pl.x - 10, gY);
+            ctx.moveTo(pl.x + 10, pl.y); ctx.lineTo(pl.x + 10, gY);
+            ctx.stroke();
+            for (let ry = pl.y + 12; ry < gY; ry += 16) {
+                ctx.fillStyle = '#facc15';
+                ctx.fillRect(pl.x - 10, ry, 20, 3);
             }
-        }
-    }
 
-    function triggerError() {
-        energy = Math.max(0, energy - 15);
-        motora.expression = 'sad'; motora.exprTimer = 90;
-    }
+            // Caixa CTO
+            ctx.fillStyle = pl.connected ? '#22c55e' : '#f59e0b';
+            roundRectPath(pl.x - 16, pl.y - 24, 32, 24, 5);
+            ctx.fill();
 
-    function endGame(win, msg) {
-        gameState = 'GAMEOVER';
-        document.getElementById('screen-gameover').style.display = 'flex';
-        document.getElementById('go-title').innerText = win ? "🏆 VITÓRIA!" : "⚠️ FIM DE EXPEDIENTE";
-        document.getElementById('go-text').innerText = msg + `\n\nDinheirinho: R$ ${money}`;
-    }
-
-    function drawGame() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        let cameraX = motora.x - canvas.width * 0.3;
-
-        ctx.save();
-        ctx.translate(-cameraX, 0);
-
-        let groundY = canvas.height * 0.6;
-        ctx.fillStyle = "#15803d";
-        ctx.fillRect(cameraX, groundY, canvas.width, canvas.height - groundY);
-        ctx.fillStyle = "#334155";
-        ctx.fillRect(cameraX, groundY, canvas.width, 12);
-
-        // Linhas amarelas da rua
-        ctx.fillStyle = "#facc15";
-        for (let rx = cameraX; rx < cameraX + canvas.width; rx += 100) {
-            ctx.fillRect(rx, groundY + 4, 40, 4);
-        }
-
-        if (currentPhase === 1) {
-            houses.forEach(h => {
-                // Corpo da Casa
-                ctx.fillStyle = h.solved ? "#dcfce7" : "#f8fafc";
-                ctx.fillRect(h.x, h.y + 35, h.w, h.h - 35);
-                // Telhado
-                ctx.fillStyle = h.solved ? "#16a34a" : "#dc2626";
+            // Cabo aéreo ou Alerta de Vão Sem Fio
+            if (pl.hasWireToNext) {
+                ctx.strokeStyle = pl.connected ? '#38bdf8' : '#e2e8f0';
+                ctx.lineWidth = 4;
                 ctx.beginPath();
-                ctx.moveTo(h.x - 10, h.y + 35);
-                ctx.lineTo(h.x + h.w / 2, h.y);
-                ctx.lineTo(h.x + h.w + 10, h.y + 35);
-                ctx.closePath();
+                ctx.moveTo(pl.x, pl.y);
+                ctx.lineTo(pl.x + 330, pl.y);
+                ctx.stroke();
+            } else {
+                ctx.fillStyle = '#ef4444';
+                roundRectPath(pl.x + 70, pl.y - 16, 165, 22, 6);
                 ctx.fill();
-                // Janela expressiva com emoji
-                ctx.fillStyle = "#38bdf8";
-                ctx.fillRect(h.x + 25, h.y + 50, 40, 35);
-                ctx.font = "16px sans-serif";
-                ctx.fillText(h.solved ? "😊" : "⚠️", h.x + 33, h.y + 74);
-            });
-        } else {
-            wires.forEach(w => {
-                ctx.fillStyle = "#64748b";
-                ctx.fillRect(w.x - 5, w.poleY - 30, 10, groundY - (w.poleY - 30));
-                ctx.fillStyle = "#eab308";
-                ctx.fillRect(w.x - 12, w.poleY - 25, 24, 24);
-                if (w.hasWire) {
-                    ctx.strokeStyle = w.connected ? "#38bdf8" : "#cbd5e1";
-                    ctx.lineWidth = 3;
-                    ctx.beginPath(); ctx.moveTo(w.x, w.poleY); ctx.lineTo(w.x + 300, w.poleY); ctx.stroke();
-                }
-            });
-        }
-
-        rivals.forEach(r => {
-            if (!r.alive) return;
-            ctx.fillStyle = r.type === 'vivo' ? '#9333ea' : r.type === 'nio' ? '#0284c7' : '#f97316';
-            ctx.fillRect(r.x, r.y, r.w, r.h);
-            ctx.fillStyle = "#fff"; ctx.font = "10px sans-serif";
-            ctx.fillText(r.type.toUpperCase(), r.x + 4, r.y - 6);
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif';
+                ctx.fillText('⚠️ SEM FIO • DESÇA (⬇️)', pl.x + 80, pl.y - 1);
+            }
         });
+    }
 
-        projectiles.forEach(p => {
-            ctx.fillStyle = p.type === 'disco' ? '#ef4444' : '#38bdf8';
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
-        });
-
-        // Desenhar Motora Polido (BrasilCenter)
-        let mx = motora.x, my = motora.y;
-        // Uniforme
-        ctx.fillStyle = "#1d4ed8";
-        ctx.fillRect(mx + 8, my + 22, 28, 30);
-        // Cabeça
-        ctx.fillStyle = "#fbcfe8";
-        ctx.beginPath(); ctx.arc(mx + 22, my + 14, 13, 0, Math.PI * 2); ctx.fill();
-        // Óculos Amarelos
-        ctx.strokeStyle = "#eab308"; ctx.lineWidth = 2.5;
-        ctx.strokeRect(mx + 15, my + 9, 14, 7);
-        // Cavanhaque
-        ctx.fillStyle = "#475569"; ctx.fillRect(mx + 18, my + 20, 8, 4);
-
-        // Expressão facial
-        if (motora.expression === 'happy') {
-            ctx.strokeStyle = "#16a34a"; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.arc(mx + 22, my + 18, 4, 0, Math.PI); ctx.stroke();
-        } else if (motora.expression === 'sad') {
-            ctx.strokeStyle = "#2563eb"; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.arc(mx + 22, my + 23, 3, Math.PI, 0); ctx.stroke();
-        }
-
+    // Mira Laser Dourada quando o Motora está no ar (Tiro Reto Multi-Casas!)
+    if (motora.jumping && !motora.onWire && state === 'PLAYING') {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(250, 204, 21, 0.75)';
+        ctx.setLineDash([8, 6]);
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(motora.x + motora.w, motora.y + 38);
+        ctx.lineTo(motora.x + motora.w + 520 * motora.facing, motora.y + 38);
+        ctx.stroke();
         ctx.restore();
     }
 
-    function mainLoop() {
-        updateGame();
-        drawGame();
-        document.getElementById('ui-time').innerText = Math.max(0, Math.ceil(timeLeft));
-        document.getElementById('ui-money').innerText = money;
-        document.getElementById('ui-energy').innerText = Math.round(energy);
-        document.getElementById('ui-progress').innerText = `${progressCount}/${targetGoal}`;
-        requestAnimationFrame(mainLoop);
-    }
-
-    window.addEventListener('keydown', e => {
-        if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
-        if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
-        if (e.key === 'ArrowUp' || e.key === 'w') { keys.up = true; doJump(); }
-        if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
-        if (e.key === ' ') doAction();
-    });
-    window.addEventListener('keyup', e => {
-        if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
-        if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
-        if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
-        if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
+    // Desenhar Surpresinhas com Borda Verde (Pegue!) ou Vermelha (Fuja!)
+    surprises.forEach(s => {
+        ctx.save();
+        ctx.fillStyle = s.good ? '#064e3b' : '#450a0a';
+        ctx.strokeStyle = s.good ? '#4ade80' : '#ef4444';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(s.x, s.y, 16, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.font = '14px sans-serif';
+        const ic = s.type === 'money' ? '💵' : (s.type === 'giant' ? '🟡' : (s.type === 'gold' ? '⚡' : (s.type === 'mini' ? '🟣' : '🐢')));
+        ctx.fillText(ic, s.x - 8, s.y + 5);
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = s.good ? '#4ade80' : '#fca5a5';
+        ctx.fillText(s.good ? 'PEGUE!' : 'FUJA!', s.x - 16, s.y - 20);
+        ctx.restore();
     });
 
-    requestAnimationFrame(mainLoop);
+    // Desenhar Rivais
+    rivals.forEach(r => {
+        if (r.alive || r.squishedTimer > 0) drawRivalPolished(r);
+    });
+
+    // Desenhar Disquinhos / Cabos Disparados
+    projectiles.forEach(p => {
+        ctx.save();
+        ctx.fillStyle = p.gold ? '#facc15' : (p.phase === 1 ? '#dc2626' : '#38bdf8');
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 8px sans-serif';
+        ctx.fillText('VT', p.x - 6, p.y + 3);
+        ctx.restore();
+    });
+
+    // Desenhar o Protagonista Motora
+    drawMotoraPolished();
+
+    // Textos Flutuantes (Popups)
+    popups.forEach(pp => {
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = pp.color;
+        ctx.fillText(pp.text, pp.x, pp.y);
+    });
+
+    ctx.restore();
+}
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+// Controles Touch e Mouse sem conflito
+function bindHoldButton(id, keyName) {
+    const el = document.getElementById(id);
+    const setKey = (val, e) => {
+        if (e && e.cancelable) e.preventDefault();
+        keys[keyName] = val;
+        el.classList.toggle('active', val);
+    };
+    el.addEventListener('pointerdown', e => setKey(true, e));
+    el.addEventListener('pointerup', e => setKey(false, e));
+    el.addEventListener('pointerleave', e => setKey(false, e));
+    el.addEventListener('pointercancel', e => setKey(false, e));
+}
+bindHoldButton('k-left', 'left');
+bindHoldButton('k-right', 'right');
+bindHoldButton('k-up', 'up');
+bindHoldButton('k-down', 'down');
+
+document.getElementById('k-jump').addEventListener('pointerdown', e => {
+    if (e.cancelable) e.preventDefault();
+    triggerJump();
+});
+document.getElementById('k-shoot').addEventListener('pointerdown', e => {
+    if (e.cancelable) e.preventDefault();
+    triggerShoot();
+});
+
+// Suporte a Teclado
+window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+    if (e.key === 'ArrowUp' || e.key === 'w') { keys.up = true; triggerJump(); }
+    if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
+    if (e.key === ' ') triggerShoot();
+});
+window.addEventListener('keyup', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+    if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+    if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
+    if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
+});
+
+buildPhaseWorld(1);
+requestAnimationFrame(loop);
 </script>
-
 </body>
 </html>
