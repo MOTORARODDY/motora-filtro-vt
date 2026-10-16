@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -61,7 +61,7 @@
         }
         .sub-banner span.equip { color: #38bdf8; margin-right: 8px; }
 
-        /* Controlos Inferiores: Teclas Achatadas em T Invertido (Sem Bola Preta) + Botões Direita */
+        /* Controles Inferiores: Teclas Achatadas em T Invertido (Sem Bola Preta) + Botões Direita */
         .controls-layer {
             position: absolute; bottom: 10px; left: 14px; right: 14px;
             display: flex; justify-content: space-between; align-items: flex-end;
@@ -164,7 +164,7 @@
         <span id="hud-mission">Fase 1 (0/30): Acerte casinhas c/ Disco VT (+15s) ou pise nos rivais (+R$35)!</span>
     </div>
 
-    <!-- Controlos Inferiores -->
+    <!-- Controles Inferiores -->
     <div class="controls-layer">
         <div class="dpad-flat">
             <div class="dpad-row">
@@ -191,7 +191,7 @@
         </div>
     </div>
 
-    <!-- Ecrã Inicial -->
+    <!-- Tela Inicial -->
     <div class="modal-backdrop" id="modal-start">
         <div class="modal-card" style="text-align:center;">
             <div style="font-size:12px; color:#84cc16; font-weight:800; letter-spacing:1px;">BRASILCENTER • #SOUDAQUALIDADE</div>
@@ -207,7 +207,7 @@
         </div>
     </div>
 
-    <!-- Ecrã Briefing -->
+    <!-- Tela Briefing -->
     <div class="modal-backdrop" id="modal-briefing" style="display:none;">
         <div class="modal-card">
             <h2 id="brief-title" style="color:#4ade80; font-size:18px; margin-bottom:8px;"></h2>
@@ -224,11 +224,11 @@
         <div class="modal-card">
             <h2 style="color:#facc15; font-size:17px; margin-bottom:8px;">📖 GUIA DE ÍCONES E SURPRESINHAS</h2>
             <div style="font-size:12.5px; line-height:1.55; color:#e2e8f0;">
-                <p style="color:#4ade80; font-weight:800;">✅ PEGUE SEMPRE (Borda Verde):</p>
+                <p style="color:#4ade80; font-weight:800;">✅ PEGUE SEMPRE (Borda Verde • Ficam Paradas Quicando):</p>
                 <p>• 💵 <b>Dinheirinho (+R$ 30):</b> Use no topo para comprar Patinete (R$50), Bike (R$120) ou Motinha (R$250).</p>
                 <p>• 🟡 <b>Super Disco Gigante (8s):</b> Tiro maior e alcance longo em diagonal sem cair.</p>
                 <p>• ⚡ <b>Turbo Dourado (+10% Energia):</b> Disparo ultra rápido e recarrega energia.</p>
-                <p style="color:#f87171; font-weight:800; margin-top:8px;">❌ FUJA OU PULE POR CIMA (Borda Vermelha):</p>
+                <p style="color:#f87171; font-weight:800; margin-top:8px;">❌ FUJA OU PULE POR CIMA (Borda Vermelha • Vêm para a Esquerda):</p>
                 <p>• 🟣 <b>Mini Sinal / 🐢 Sinal Lento:</b> Encolhem o alcance do disco e tiram <b>-15% de Energia</b>.</p>
                 <p>• 👾 <b>Rivais (Boneco Vivo, Robô Nio e Bluesman Tim):</b> Não bata de frente! <b>Pule em cima deles (⬆️)</b> para amassá-los e ganhar <b>+R$ 35</b> e <b>+10% de Energia</b>!</p>
             </div>
@@ -260,7 +260,7 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// ================= MOTOR DE ÁUDIO WEB AUDIO API RESTAURADO =================
+// ================= MOTOR DE ÁUDIO WEB AUDIO API =================
 let soundEnabled = true;
 let audioCtx = null;
 
@@ -587,13 +587,18 @@ function registerSuccess(x, y, label) {
     playSfx('hit');
     addPopup(x, y, label + ' (+15s | +10%⚡)', '#4ade80');
 
+    // Surpresinha saindo do aparelho:
+    // As boas dão um pulinho para a esquerda e ficam paradas quicando esperando o Motora;
+    // As pegadinhas ruins correm para a esquerda na direção do Motora!
     const types = ['money', 'giant', 'gold', 'mini', 'slow'];
     const st = types[Math.floor(Math.random() * types.length)];
+    const isGood = (st === 'money' || st === 'giant' || st === 'gold');
     surprises.push({
-        x: x + 20, y: y + 20,
-        vx: 1.5, vy: -5.5,
+        x: x + 15, y: y + 25,
+        vx: isGood ? -0.9 : -1.8,
+        vy: -5.5,
         type: st,
-        good: (st === 'money' || st === 'giant' || st === 'gold')
+        good: isGood
     });
 
     if (solvedCount >= GOAL_TARGET) {
@@ -753,12 +758,17 @@ function update() {
         }
     }
 
+    // Atualizar Surpresinhas: Boas param no lugar ao tocar o chão; Pegadinhas correm para a esquerda
     for (let i = surprises.length - 1; i >= 0; i--) {
         const s = surprises[i];
         s.x += s.vx;
         s.y += s.vy;
         s.vy += 0.28;
-        if (s.y >= gY - 26) { s.y = gY - 26; s.vy = -3.8; }
+        if (s.y >= gY - 26) {
+            s.y = gY - 26;
+            s.vy = -3.8;
+            if (s.good) s.vx = 0; // Fica parada quicando no lugar para o Motora pegar!
+        }
 
         if (Math.abs((motora.x + motora.w / 2) - s.x) < 38 && Math.abs((motora.y + motora.h / 2) - s.y) < 48) {
             if (s.type === 'money') {
@@ -924,7 +934,6 @@ function drawRivalOriginal(r) {
     ctx.scale(1, scaleY);
 
     if (r.type === 'nio') {
-        // Etiqueta superior arredondada azul "ROBÔ NIO" (Igual ao Print 6:33)
         ctx.fillStyle = '#0284c7';
         roundRectPath(-14, -30, 76, 20, 10);
         ctx.fill();
@@ -932,13 +941,11 @@ function drawRivalOriginal(r) {
         ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px sans-serif';
         ctx.fillText('ROBÔ NIO', -3, -16);
 
-        // Antena com bolinha ciano brilhante
         ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.moveTo(25, 4); ctx.lineTo(25, -6); ctx.stroke();
         ctx.fillStyle = '#38bdf8';
         ctx.beginPath(); ctx.arc(25, -7, 4, 0, Math.PI * 2); ctx.fill();
 
-        // Cabeça branca arredondada com visor preto e olhos ciano (Igual ao Print!)
         ctx.fillStyle = '#f8fafc';
         roundRectPath(3, 4, 44, 24, 11);
         ctx.fill();
@@ -951,7 +958,6 @@ function drawRivalOriginal(r) {
         ctx.fillStyle = '#38bdf8';
         ctx.beginPath(); ctx.arc(18, 15.5, 3.3, 0, Math.PI * 2); ctx.arc(32, 15.5, 3.3, 0, Math.PI * 2); ctx.fill();
 
-        // Corpo branco com peito NIO e rodinhas
         ctx.fillStyle = '#f1f5f9';
         roundRectPath(6, 29, 38, 28, 9);
         ctx.fill();
@@ -964,7 +970,6 @@ function drawRivalOriginal(r) {
         ctx.beginPath(); ctx.arc(14, 60, 5, 0, Math.PI * 2); ctx.arc(36, 60, 5, 0, Math.PI * 2); ctx.fill();
 
     } else if (r.type === 'vivo') {
-        // Etiqueta roxa "VIVO"
         ctx.fillStyle = '#7e22ce';
         roundRectPath(-6, -28, 62, 20, 10);
         ctx.fill();
@@ -972,34 +977,28 @@ function drawRivalOriginal(r) {
         ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px sans-serif';
         ctx.fillText('VIVO', 12, -14);
 
-        // Mascote Roxo Clássico da Vivo com bracinhos erguidos e curvas suaves
         const vGrad = ctx.createLinearGradient(0, 0, 0, 62);
         vGrad.addColorStop(0, '#c084fc');
         vGrad.addColorStop(1, '#6b21a8');
         ctx.fillStyle = vGrad;
 
-        // Cabeça
         ctx.beginPath(); ctx.arc(25, 16, 13, 0, Math.PI * 2); ctx.fill();
-        // Tronco e pernas arredondadas
         roundRectPath(11, 26, 28, 26, 12); ctx.fill();
         roundRectPath(12, 46, 10, 16, 5); ctx.fill();
         roundRectPath(28, 46, 10, 16, 5); ctx.fill();
 
-        // Bracinhos levantados em "Y"
         ctx.strokeStyle = '#9333ea'; ctx.lineWidth = 7; ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(13, 32); ctx.lineTo(3, 18);
         ctx.moveTo(37, 32); ctx.lineTo(47, 18);
         ctx.stroke();
 
-        // Olhos e boquinha
         ctx.fillStyle = '#ffffff';
         ctx.beginPath(); ctx.arc(20, 15, 3.2, 0, Math.PI * 2); ctx.arc(30, 15, 3.2, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#1e1b4b';
         ctx.beginPath(); ctx.arc(20, 15, 1.5, 0, Math.PI * 2); ctx.arc(30, 15, 1.5, 0, Math.PI * 2); ctx.fill();
 
     } else {
-        // Bluesman Tim com Chapéu Fedora, Óculos Escuros e Saxofone Dourado
         ctx.fillStyle = '#1d4ed8';
         roundRectPath(-14, -28, 78, 20, 10);
         ctx.fill();
@@ -1007,7 +1006,6 @@ function drawRivalOriginal(r) {
         ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px sans-serif';
         ctx.fillText('BLUES TIM', -2, -14);
 
-        // Fato Azul TIM e gravata vermelha
         ctx.fillStyle = '#1e3a8a';
         roundRectPath(8, 26, 34, 34, 8); ctx.fill();
         ctx.fillStyle = '#ffffff';
@@ -1015,7 +1013,6 @@ function drawRivalOriginal(r) {
         ctx.fillStyle = '#ef4444';
         ctx.fillRect(24, 30, 3, 12);
 
-        // Cabeça e Óculos Blues
         ctx.fillStyle = '#eab676';
         ctx.beginPath(); ctx.arc(25, 16, 12, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#0f172a';
@@ -1023,14 +1020,12 @@ function drawRivalOriginal(r) {
         ctx.fillRect(26, 12, 9, 5);
         ctx.fillRect(24, 13, 2, 2);
 
-        // Chapéu Fedora Blues
         ctx.fillStyle = '#0f172a';
         roundRectPath(6, 3, 38, 5, 2); ctx.fill();
         roundRectPath(12, -5, 26, 10, 4); ctx.fill();
         ctx.fillStyle = '#38bdf8';
         ctx.fillRect(12, 1, 26, 2.5);
 
-        // Saxofone Dourado
         ctx.strokeStyle = '#facc15'; ctx.lineWidth = 4; ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(18, 24); ctx.lineTo(6, 38); ctx.lineTo(12, 45);
@@ -1047,11 +1042,9 @@ function drawMotoraOriginal() {
     const cx = mx + 31;
     ctx.save();
 
-    // Sombra oval suave no asfalto
     ctx.fillStyle = 'rgba(0,0,0,0.32)';
     ctx.beginPath(); ctx.ellipse(cx, my + motora.h + 1, 25, 6, 0, 0, Math.PI * 2); ctx.fill();
 
-    // Veículos comprados
     if (motora.vehicle === 'patinete') {
         ctx.fillStyle = '#f59e0b';
         roundRectPath(mx + 4, my + motora.h - 6, 54, 6, 3); ctx.fill();
@@ -1070,12 +1063,10 @@ function drawMotoraOriginal() {
         ctx.beginPath(); ctx.arc(mx + 10, my + motora.h + 2, 11, 0, Math.PI * 2); ctx.arc(mx + 52, my + motora.h + 2, 11, 0, Math.PI * 2); ctx.fill();
     }
 
-    // Calças de Ganga Azul-Escuro (Jeans da Caixa)
     ctx.fillStyle = '#1e3a8a';
     roundRectPath(cx - 16, my + 68, 14, 19, 4); ctx.fill();
     roundRectPath(cx + 2, my + 68, 14, 19, 4); ctx.fill();
 
-    // Sapatilhas Pretas com Detalhes e Sola Branca (Igual ao Print 6:33)
     ctx.fillStyle = '#0f172a';
     roundRectPath(cx - 19, my + 84, 18, 11, 4); ctx.fill();
     roundRectPath(cx + 1, my + 84, 18, 11, 4); ctx.fill();
@@ -1086,7 +1077,6 @@ function drawMotoraOriginal() {
     ctx.fillRect(cx - 13, my + 86, 6, 2);
     ctx.fillRect(cx + 7, my + 86, 6, 2);
 
-    // Camisa Polo Azul BrasilCenter com Gola e Mangas
     const shirtGrad = ctx.createLinearGradient(0, my + 38, 0, my + 72);
     shirtGrad.addColorStop(0, '#1d4ed8');
     shirtGrad.addColorStop(1, '#1e40af');
@@ -1094,69 +1084,56 @@ function drawMotoraOriginal() {
     roundRectPath(cx - 21, my + 39, 42, 33, 10);
     ctx.fill();
 
-    // Mangas azuis e braços
     roundRectPath(cx - 26, my + 41, 9, 16, 4); ctx.fill();
     roundRectPath(cx + 17, my + 41, 9, 16, 4); ctx.fill();
 
-    // Gola Polo
     ctx.fillStyle = '#1e3a8a';
     ctx.beginPath();
     ctx.moveTo(cx - 10, my + 39); ctx.lineTo(cx - 3, my + 46); ctx.lineTo(cx, my + 42);
     ctx.lineTo(cx + 3, my + 46); ctx.lineTo(cx + 10, my + 39);
     ctx.fill();
 
-    // Logótipo verde/azul no peito e fita do crachá
     ctx.fillStyle = '#4ade80';
     ctx.beginPath(); ctx.arc(cx + 10, my + 47, 2.5, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2.2;
     ctx.beginPath(); ctx.moveTo(cx - 7, my + 40); ctx.lineTo(cx, my + 54); ctx.lineTo(cx + 7, my + 40); ctx.stroke();
 
-    // Relógio preto no pulso esquerdo e mãos a segurar o disco
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(cx + 17, my + 55, 6, 4);
 
-    // Disco Grande Vermelho "Filtro VT" segurado à frente (Igual ao Print 6:33)
     const discColor = currentPhase === 1 ? '#dc2626' : '#0284c7';
     ctx.fillStyle = discColor;
     ctx.beginPath(); ctx.arc(cx, my + 60, 16, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 2.2; ctx.stroke();
 
-    // Arco branco da Claro e texto "Filtro VT" + ícone headset dentro do disco
     ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.arc(cx, my + 52, 6, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
     ctx.fillStyle = '#ffffff'; ctx.font = 'bold 7.5px sans-serif';
     ctx.fillText(currentPhase === 1 ? 'Filtro VT' : 'Fibra VT', cx - 14, my + 60);
     ctx.beginPath(); ctx.arc(cx, my + 68, 3.5, Math.PI, 0); ctx.stroke();
 
-    // Mãos cor de pele nas laterais do disco
     ctx.fillStyle = '#c68642';
     ctx.beginPath(); ctx.arc(cx - 16, my + 59, 5.2, 0, Math.PI * 2); ctx.arc(cx + 16, my + 59, 5.2, 0, Math.PI * 2); ctx.fill();
 
-    // ================= CABEÇA COLECIONÁVEL FIEL AO PRINT 6:33 =================
     const headY = my + 20;
-    // Orelhas
     ctx.fillStyle = '#b87333';
     ctx.beginPath(); ctx.arc(cx - 21, headY + 2, 4.5, 0, Math.PI * 2); ctx.arc(cx + 21, headY + 2, 4.5, 0, Math.PI * 2); ctx.fill();
 
-    // Rosto arredondado com gradiente suave
     const headGrad = ctx.createRadialGradient(cx - 5, headY - 8, 4, cx, headY, 22);
     headGrad.addColorStop(0, '#e09f67');
     headGrad.addColorStop(1, '#b87333');
     ctx.fillStyle = headGrad;
     ctx.beginPath(); ctx.arc(cx, headY, 21, 0, Math.PI * 2); ctx.fill();
 
-    // Brilho suave na testa/careca (Igual ao Print!)
     ctx.fillStyle = 'rgba(255,255,255,0.28)';
     ctx.beginPath(); ctx.ellipse(cx - 6, headY - 12, 8, 4, -0.25, 0, Math.PI * 2); ctx.fill();
 
-    // Sobrancelhas expressivas
     ctx.strokeStyle = '#27272a'; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(cx - 14, headY - 7); ctx.quadraticCurveTo(cx - 9, headY - 10, cx - 4, headY - 7);
     ctx.moveTo(cx + 4, headY - 7); ctx.quadraticCurveTo(cx + 9, headY - 10, cx + 14, headY - 7);
     ctx.stroke();
 
-    // Olhos grandes com esclera branca, íris castanha/preta e brilho branco
     ctx.fillStyle = '#ffffff';
     ctx.beginPath(); ctx.arc(cx - 9, headY - 1, 5.2, 0, Math.PI * 2); ctx.arc(cx + 9, headY - 1, 5.2, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#18181b';
@@ -1164,22 +1141,18 @@ function drawMotoraOriginal() {
     ctx.fillStyle = '#ffffff';
     ctx.beginPath(); ctx.arc(cx - 10.2, headY - 2.4, 1.2, 0, Math.PI * 2); ctx.arc(cx + 7.8, headY - 2.4, 1.2, 0, Math.PI * 2); ctx.fill();
 
-    // Óculos Amarelos Vibrantes (Armação Fiel à Caixa e ao Print!)
     ctx.strokeStyle = '#facc15'; ctx.lineWidth = 3.2;
     roundRectPath(cx - 17, headY - 6.5, 15, 11, 3.5); ctx.stroke();
     roundRectPath(cx + 2, headY - 6.5, 15, 11, 3.5); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(cx - 2, headY - 1.5); ctx.lineTo(cx + 2, headY - 1.5); ctx.stroke();
 
-    // Nariz simpático
     ctx.fillStyle = '#9a5b25';
     ctx.beginPath(); ctx.arc(cx, headY + 4.5, 2.2, 0, Math.PI * 2); ctx.fill();
 
-    // Cavanhaque Grisalho/Escuro bem contornado (Igual ao Print 6:33)
     ctx.strokeStyle = '#27272a'; ctx.lineWidth = 3.8;
     roundRectPath(cx - 9.5, headY + 7.5, 19, 11, 5);
     ctx.stroke();
 
-    // Boca dentro do cavanhaque (Sorriso ao acertar, Choro com lágrimas ao errar!)
     if (motora.expr === 'happy') {
         ctx.fillStyle = '#ffffff';
         ctx.beginPath(); ctx.arc(cx, headY + 11.5, 5.5, 0, Math.PI); ctx.fill();
@@ -1228,7 +1201,6 @@ function draw() {
 
     ctx.translate(-camX, 0);
 
-    // Passeio e Estrada com faixas tracejadas amarelas
     ctx.fillStyle = '#94a3b8';
     ctx.fillRect(camX - 50, gY - 6, W + 100, 8);
     ctx.fillStyle = '#1e293b';
