@@ -1,15 +1,5 @@
-Bem observado! Como o Motora avança da esquerda para a direita, quando as surpresinhas corriam para a direita (vx: 1.5), elas acabavam fugindo de você!
-Já fiz o ajuste inteligente no código:
- * Surpresinhas Boas (PEGUE! — Dinheirinho 💵, Super Disco 🟡 e Turbo Dourado ⚡): Agora elas dão um pulinho para a esquerda ao sair da casinha e ficam paradas quicando no mesmo lugar esperando você passar para coletar com calma!
- * Pegadinhas Ruins (FUJA! — Mini Sinal 🟣 e Sinal Lento 🐢): Agora elas correm para a esquerda (vx: -1.8) na direção do Motora, exigindo que você pule por cima delas para desviar!
-⚡ Dica Rápida (Para mudar só 1 linha no GitHub se preferir):
-Se não quiser colar o código inteiro de novo, lá no seu arquivo index.html do GitHub (por volta da linha 425, dentro da função registerSuccess), basta trocar:
-vx: 1.5, vy: -5.5,
-por:
-vx: (st === 'mini' || st === 'slow') ? -1.8 : 0, vy: -5.5,
-Ou, se achar mais prático, clique em Copiar no código completo já corrigido abaixo e cole por cima lá no seu index.html do GitHub:
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -20,7 +10,6 @@ Ou, se achar mais prático, clique em Copiar no código completo já corrigido a
         #game-container { position: relative; width: 100vw; height: 100dvh; overflow: hidden; background: #0f172a; }
         canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 
-        /* Barra Superior Fiel ao Print */
         .top-bar {
             position: absolute; top: 6px; left: 8px; right: 8px;
             background: rgba(10, 22, 44, 0.94);
@@ -61,7 +50,6 @@ Ou, se achar mais prático, clique em Copiar no código completo já corrigido a
             border-radius: 10px; padding: 5px 8px; font-size: 11px; font-weight: 800; cursor: pointer;
         }
 
-        /* Faixa Informativa Abaixo da Barra Superior */
         .sub-banner {
             position: absolute; top: 47px; left: 50%; transform: translateX(-50%);
             background: rgba(10, 22, 44, 0.9); border: 1px solid rgba(56, 189, 248, 0.45);
@@ -71,7 +59,6 @@ Ou, se achar mais prático, clique em Copiar no código completo já corrigido a
         }
         .sub-banner span.equip { color: #38bdf8; margin-right: 8px; }
 
-        /* Controles Inferiores: Teclas Achatadas em T Invertido (Sem Bola Preta) + Botões Direita */
         .controls-layer {
             position: absolute; bottom: 10px; left: 14px; right: 14px;
             display: flex; justify-content: space-between; align-items: flex-end;
@@ -117,7 +104,6 @@ Ou, se achar mais prático, clique em Copiar no código completo já corrigido a
         .round-action .main-lbl { font-size: 12px; margin-top: 2px; }
         .round-action .sub-lbl { font-size: 8px; opacity: 0.92; font-weight: 700; }
 
-        /* Modais */
         .modal-backdrop {
             position: absolute; inset: 0; background: rgba(7, 17, 32, 0.88);
             display: flex; align-items: center; justify-content: center;
@@ -147,7 +133,6 @@ Ou, se achar mais prático, clique em Copiar no código completo já corrigido a
 <div id="game-container">
     <canvas id="gameCanvas"></canvas>
 
-    <!-- Barra Superior -->
     <div class="top-bar">
         <div class="pill pill-bc"><span class="dot-green"></span> BrasilCenter</div>
         <div class="pill pill-time">⏱️ <span id="hud-time">90</span>s</div>
@@ -168,13 +153,11 @@ Ou, se achar mais prático, clique em Copiar no código completo já corrigido a
         <button class="icon-btn" onclick="toggleFullScreen()">⛶</button>
     </div>
 
-    <!-- Sub-banner -->
     <div class="sub-banner" id="sub-banner">
         <span class="equip" id="hud-equip">👟 Tênis Preto Original</span> |
         <span id="hud-mission">Fase 1 (0/30): Acerte casinhas c/ Disco VT (+15s) ou pise nos rivais (+R$35)!</span>
     </div>
 
-    <!-- Controles Inferiores -->
     <div class="controls-layer">
         <div class="dpad-flat">
             <div class="dpad-row">
@@ -201,7 +184,6 @@ Ou, se achar mais prático, clique em Copiar no código completo já corrigido a
         </div>
     </div>
 
-    <!-- Tela Inicial -->
     <div class="modal-backdrop" id="modal-start">
         <div class="modal-card" style="text-align:center;">
             <div style="font-size:12px; color:#84cc16; font-weight:800; letter-spacing:1px;">BRASILCENTER • #SOUDAQUALIDADE</div>
@@ -217,7 +199,6 @@ Ou, se achar mais prático, clique em Copiar no código completo já corrigido a
         </div>
     </div>
 
-    <!-- Tela Briefing -->
     <div class="modal-backdrop" id="modal-briefing" style="display:none;">
         <div class="modal-card">
             <h2 id="brief-title" style="color:#4ade80; font-size:18px; margin-bottom:8px;"></h2>
@@ -229,24 +210,22 @@ Ou, se achar mais prático, clique em Copiar no código completo já corrigido a
         </div>
     </div>
 
-    <!-- Guia de Ícones -->
     <div class="modal-backdrop" id="modal-guide" style="display:none;">
         <div class="modal-card">
             <h2 style="color:#facc15; font-size:17px; margin-bottom:8px;">📖 GUIA DE ÍCONES E SURPRESINHAS</h2>
             <div style="font-size:12.5px; line-height:1.55; color:#e2e8f0;">
-                <p style="color:#4ade80; font-weight:800;">✅ PEGUE SEMPRE (Borda Verde • Ficam Paradas Quicando):</p>
-                <p>• 💵 <b>Dinheirinho (+R$ 30):</b> Use no topo para comprar Patinete (R$50), Bike (R$120) ou Motinha (R$250).</p>
-                <p>• 🟡 <b>Super Disco Gigante (8s):</b> Tiro maior e alcance longo em diagonal sem cair.</p>
+                <p style="color:#4ade80; font-weight:800;">✅ PEGUE SEMPRE (Borda Sólida • Maiores e Paradas):</p>
+                <p>• 💵 <b>Dinheirinho (+R$ 30):</b> Para comprar Patinete, Bike ou Motinha.</p>
+                <p>• 🟡 <b>Super Disco Gigante (8s):</b> Tiro maior e alcance longo em diagonal.</p>
                 <p>• ⚡ <b>Turbo Dourado (+10% Energia):</b> Disparo ultra rápido e recarrega energia.</p>
-                <p style="color:#f87171; font-weight:800; margin-top:8px;">❌ FUJA OU PULE POR CIMA (Borda Vermelha • Vêm para a Esquerda):</p>
-                <p>• 🟣 <b>Mini Sinal / 🐢 Sinal Lento:</b> Encolhem o alcance do disco e tiram <b>-15% de Energia</b>.</p>
-                <p>• 👾 <b>Rivais (Boneco Vivo, Robô Nio e Bluesman Tim):</b> Não bata de frente! <b>Pule em cima deles (⬆️)</b> para amassá-los e ganhar <b>+R$ 35</b> e <b>+10% de Energia</b>!</p>
+                <p style="color:#f87171; font-weight:800; margin-top:8px;">❌ FUJA OU PULE (Borda Pontilhada Vermelha • Vêm para a Esquerda):</p>
+                <p>• 🟣 <b>Mini Sinal / 🐢 Sinal Lento:</b> Encolhem o alcance e tiram <b>-15% de Energia</b>.</p>
+                <p>• 👾 <b>Rivais (Vivo, Robô Nio, Bluesman Tim):</b> Pule em cima deles (⬆️) para eliminá-los (+R$35)!</p>
             </div>
             <button class="cta-btn cta-blue" style="width:100%; margin-top:12px;" onclick="closeGuide()">ENTENDI, VOLTAR</button>
         </div>
     </div>
 
-    <!-- Fim de Jogo -->
     <div class="modal-backdrop" id="modal-end" style="display:none;">
         <div class="modal-card" style="text-align:center;">
             <h2 id="end-title" style="font-size:22px; margin-bottom:8px;"></h2>
@@ -270,7 +249,6 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// ================= MOTOR DE ÁUDIO WEB AUDIO API =================
 let soundEnabled = true;
 let audioCtx = null;
 
@@ -358,7 +336,6 @@ function playSfx(type) {
     }
 }
 
-// ================= ESTADO DO JOGO =================
 let state = 'START';
 let currentPhase = 1;
 let phase2Unlocked = false;
@@ -597,9 +574,7 @@ function registerSuccess(x, y, label) {
     playSfx('hit');
     addPopup(x, y, label + ' (+15s | +10%⚡)', '#4ade80');
 
-    // Surpresinha saindo do aparelho:
-    // As boas dão um pulinho para a esquerda e ficam paradas quicando esperando o Motora;
-    // As pegadinhas ruins correm para a esquerda na direção do Motora!
+    // Surpresinhas maiores: Boas paradas quicando; Pegadinhas ruins vêm para a esquerda
     const types = ['money', 'giant', 'gold', 'mini', 'slow'];
     const st = types[Math.floor(Math.random() * types.length)];
     const isGood = (st === 'money' || st === 'giant' || st === 'gold');
@@ -768,19 +743,19 @@ function update() {
         }
     }
 
-    // Atualizar Surpresinhas: Boas param no lugar ao tocar o chão; Pegadinhas correm para a esquerda
+    // Atualizar Surpresinhas Maiores
     for (let i = surprises.length - 1; i >= 0; i--) {
         const s = surprises[i];
         s.x += s.vx;
         s.y += s.vy;
         s.vy += 0.28;
-        if (s.y >= gY - 26) {
-            s.y = gY - 26;
+        if (s.y >= gY - 30) {
+            s.y = gY - 30;
             s.vy = -3.8;
-            if (s.good) s.vx = 0; // Fica parada quicando no lugar para o Motora pegar!
+            if (s.good) s.vx = 0;
         }
 
-        if (Math.abs((motora.x + motora.w / 2) - s.x) < 38 && Math.abs((motora.y + motora.h / 2) - s.y) < 48) {
+        if (Math.abs((motora.x + motora.w / 2) - s.x) < 42 && Math.abs((motora.y + motora.h / 2) - s.y) < 52) {
             if (s.type === 'money') {
                 money += 30;
                 motora.expr = 'happy'; motora.exprTimer = 70;
@@ -869,7 +844,6 @@ function update() {
     document.getElementById('btn-buy-motinha').classList.toggle('shop-locked', money < 250);
 }
 
-// ================= DESENHO GRÁFICO FIEL AO PRINT 6:33 =================
 function roundRectPath(x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
@@ -1277,18 +1251,27 @@ function draw() {
         ctx.restore();
     }
 
+    // Desenhar Surpresinhas Maiores com Borda Pontilhada nas Negativas (Fuja!)
     surprises.forEach(s => {
         ctx.save();
         ctx.fillStyle = s.good ? '#064e3b' : '#450a0a';
         ctx.strokeStyle = s.good ? '#4ade80' : '#ef4444';
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(s.x, s.y, 16, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.font = '14px sans-serif';
+        ctx.lineWidth = 3.5;
+        
+        if (!s.good) {
+            ctx.setLineDash([5, 4]); // Borda pontilhada nas pegadinhas ruins para fácil identificação!
+        }
+
+        ctx.beginPath(); ctx.arc(s.x, s.y, 22, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        
+        ctx.font = '19px sans-serif';
         const ic = s.type === 'money' ? '💵' : (s.type === 'giant' ? '🟡' : (s.type === 'gold' ? '⚡' : (s.type === 'mini' ? '🟣' : '🐢')));
-        ctx.fillText(ic, s.x - 8, s.y + 5);
-        ctx.font = 'bold 9px sans-serif';
+        ctx.fillText(ic, s.x - 10, s.y + 7);
+        
+        ctx.setLineDash([]); // resetar linha
+        ctx.font = 'bold 10px sans-serif';
         ctx.fillStyle = s.good ? '#4ade80' : '#fca5a5';
-        ctx.fillText(s.good ? 'PEGUE!' : 'FUJA!', s.x - 16, s.y - 20);
+        ctx.fillText(s.good ? 'PEGUE!' : 'FUJA!', s.x - 20, s.y - 25);
         ctx.restore();
     });
 
@@ -1372,4 +1355,3 @@ requestAnimationFrame(loop);
 </script>
 </body>
 </html>
-
