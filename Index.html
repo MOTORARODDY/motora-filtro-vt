@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Motora: Missão Filtro VT - BrasilCenter</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        body { background: #0f172a; color: #fff; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; width: 100vw; height: 100dvh; display: flex; flex-direction: column; }
+        #game-container { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; background: #1e293b; }
+        canvas { display: block; width: 100%; height: 100%; background: linear-gradient(to bottom, #38bdf8, #bae6fd 60%, #15803d 60%, #166534 100%); }
+        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 10px; }
+        .interactive { pointer-events: auto; }
+        .hud-top { display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.85); padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.4); font-size: 14px; font-weight: bold; flex-wrap: wrap; gap: 6px; }
+        .btn { background: #2563eb; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: transform 0.1s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .btn:active { transform: scale(0.95); }
+        .btn-green { background: #16a34a; }
+        .btn-red { background: #dc2626; }
+        .btn-yellow { background: #ca8a04; color: #fff; }
+        .screen-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; z-index: 50; text-align: center; }
+        .controls-bar { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; padding-bottom: env(safe-area-inset-bottom, 10px); pointer-events: auto; }
+        .dpad { display: grid; grid-template-columns: 55px 55px 55px; grid-template-rows: 55px 55px; gap: 6px; }
+        .dpad-btn { background: rgba(30, 41, 59, 0.85); border: 2px solid rgba(255,255,255,0.3); color: white; font-size: 22px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .dpad-btn:active { background: rgba(56, 189, 248, 0.5); }
+        .action-btns { display: flex; gap: 12px; align-items: flex-end; }
+        .action-btn { width: 75px; height: 75px; border-radius: 50%; font-weight: bold; font-size: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 3px solid #fff; box-shadow: 0 6px 12px rgba(0,0,0,0.4); cursor: pointer; }
+        .shop-bar { display: flex; gap: 8px; background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 8px; align-items: center; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- UI Superior (HUD) -->
+    <div class="ui-overlay">
+        <div class="hud-top interactive">
+          <div>⏱️ <span id="ui-time">90</span>s</div>
+          <div>💰 R$ <span id="ui-money">0</span></div>
+          <div>⚡ <span id="ui-energy">100</span>%</div>
+          <div>🎯 Meta: <span id="ui-progress">0/30</span></div>
+          <div class="shop-bar">
+            <button class="btn btn-yellow" onclick="buyVehicle('patinete')" style="font-size:11px; padding:4px 8px;">🛴 R$50</button>
+            <button class="btn btn-yellow" onclick="buyVehicle('bike')" style="font-size:11px; padding:4px 8px;">🚲 R$120</button>
+            <button class="btn btn-yellow" onclick="buyVehicle('motinha')" style="font-size:11px; padding:4px 8px;">🛵 R$250</button>
+          </div>
+          <div>
+            <button class="btn" onclick="switchPhase(1)" id="btn-f1-top">F1 💿</button>
+            <button class="btn btn-red" onclick="switchPhase(2)" id="btn-f2-top">🔒 F2 🔌</button>
+            <button class="btn" onclick="togglePause()" style="background:#475569;">⏸️</button>
+          </div>
+        </div>
+
+        <!-- Controles Inferiores (Modo Paisagem - D-Pad e Ações) -->
+        <div class="controls-bar">
+            <div class="dpad">
+                <div></div>
+                <button class="dpad-btn interactive" id="btn-up" ontouchstart="handleInput('up', true)" ontouchend="handleInput('up', false)" onmousedown="handleInput('up', true)" onmouseup="handleInput('up', false)">⬆️</button>
+                <div></div>
+                <button class="dpad-btn interactive" id="btn-left" ontouchstart="handleInput('left', true)" ontouchend="handleInput('left', false)" onmousedown="handleInput('left', true)" onmouseup="handleInput('left', false)">⬅️</button>
+                <button class="dpad-btn interactive" id="btn-down" ontouchstart="handleInput('down', true)" ontouchend="handleInput('down', false)" onmousedown="handleInput('down', true)" onmouseup="handleInput('down', false)">⬇️</button>
+                <button class="dpad-btn interactive" id="btn-right" ontouchstart="handleInput('right', true)" ontouchend="handleInput('right', false)" onmousedown="handleInput('right', true)" onmouseup="handleInput('right', false)">➡️</button>
+            </div>
+            <div class="action-btns">
+                <button class="action-btn btn-green interactive" ontouchstart="doJump()" onmousedown="doJump()">⬆️<br>PULAR</button>
+                <button class="action-btn btn-red interactive" ontouchstart="doAction()" onmousedown="doAction()" id="action-btn-label">🔴<br>ATIRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela Inicial / Menu Principal -->
+    <div id="screen-start" class="screen-overlay">
+        <div style="background: rgba(15,23,42,0.95); padding: 25px; border-radius: 16px; border: 2px solid #38bdf8; max-width: 550px; width: 100%;">
+            <h1 style="color: #38bdf8; font-size: 24px; margin-bottom: 8px;">🎮 MOTORA: MISSÃO FILTRO VT</h1>
+            <p style="color: #cbd5e1; font-size: 13px; margin-bottom: 15px;">BrasilCenter • #SouDaQualidade[span_0](start_span)[span_0](end_span)</p>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 20px;">
+                <button class="btn btn-green" style="padding: 12px 20px; font-size: 15px;" onclick="startBriefing(1)">▶️ INICIAR FASE 1 (DISCOS)</button>
+                <button class="btn btn-red" id="menu-btn-f2" style="padding: 12px 20px; font-size: 15px;" onclick="startBriefing(2)">🔒 FASE 2 (FIBRA)</button>
+            </div>
+            <button class="btn" style="background:#334155; width:100%; margin-top:5px;" onclick="openGuide()">❓ GUIA DOS ÍCONES (O QUE PEGAR VS FUJIR)</button>
+        </div>
+    </div>
+
+    <!-- Tela de Briefing da Fase -->
+    <div id="screen-briefing" class="screen-overlay" style="display: none;">
+        <div style="background: rgba(15,23,42,0.95); padding: 25px; border-radius: 16px; border: 2px solid #16a34a; max-width: 550px; width: 100%; text-align: left;">
+            <h2 id="briefing-title" style="color: #4ade80; font-size: 20px; margin-bottom: 10px;">📋 BRIEFING DA FASE 1</h2>
+            <p id="briefing-desc" style="font-size: 14px; color: #e2e8f0; line-height: 1.5; margin-bottom: 15px;"></p>
+            <div style="background: #1e293b; padding: 10px; border-radius: 8px; font-size: 12px; color: #94a3b8; margin-bottom: 20px;">
+                ⭐ <b>Regra de Ouro:</b> Cada acerto dá +10% de Energia e +15s. Cada erro ou esbarrão tira -15% de Energia. Pule em cima dos rivais para ganhar +R$ 35!
+            </div>
+            <button class="btn btn-green" style="width: 100%; padding: 12px; font-size: 16px;" onclick="launchPhaseFromBriefing()">🚀 COMEÇAR EXPEDIENTE AGORA!</button>
+        </div>
+    </div>
+
+    <!-- Tela de Guia de Ícones -->
+    <div id="screen-guide" class="screen-overlay" style="display: none;">
+        <div style="background: rgba(15,23,42,0.95); padding: 20px; border-radius: 16px; border: 2px solid #eab308; max-width: 500px; width: 100%; text-align: left; max-height: 85vh; overflow-y: auto;">
+            <h2 style="color: #facc15; font-size: 18px; margin-bottom: 10px;">📖 GUIA DOS ÍCONES E RECOMPENSAS</h2>
+            <div style="font-size: 13px; line-height: 1.6; color: #cbd5e1;">
+                <p style="color: #4ade80; font-weight: bold; margin-top: 8px;">✅ O QUE PEGAR (Borda Verde):</p>
+                <p>• 💵 <b>Dinheirinho (+R$ 30):</b> Para comprar Patinete (R$50), Bike (R$120) ou Motinha (R$250).</p>
+                <p>• 🟡 <b>Super Disco (8s):</b> Aumenta o tamanho e o alcance do tiro em diagonal.</p>
+                <p>• ⚡ <b>Turbo Dourado:</b> Disparo veloz e recupera +10% de Energia.</p>
+                <p style="color: #f87171; font-weight: bold; margin-top: 10px;">❌ DO QUE FUGIR / PULAR (Borda Vermelha):</p>
+                <p>• 🟣 <b>Mini Sinal / 🐢 Sinal Lento:</b> Encolhem seu tiro e tiram -15% de Energia.</p>
+                <p>• 👾 <b>Bonecos Rivais (Vivo, Nio, Tim):</b> Bater de frente tira -15% de Energia. <b>Pule na cabeça deles (⬆️) para destruí-los (+R$35)!</b></p>
+            </div>
+            <button class="btn" style="width: 100%; margin-top: 15px; background: #475569;" onclick="closeGuide()">VOLTAR AO MENU</button>
+        </div>
+    </div>
+
+    <!-- Tela de Game Over / Vitória -->
+    <div id="screen-gameover" class="screen-overlay" style="display: none;">
+        <div style="background: rgba(15,23,42,0.95); padding: 25px; border-radius: 16px; border: 2px solid #ef4444; max-width: 450px; width: 100%;">
+            <h2 id="go-title" style="color: #ef4444; font-size: 22px; margin-bottom: 10px;">FIM DE EXPEDIENTE</h2>
+            <p id="go-text" style="font-size: 14px; color: #cbd5e1; margin-bottom: 20px;"></p>
+            <button class="btn btn-green" style="width: 100%; padding: 12px;" onclick="backToMenu()">🔄 VOLTAR AO MENU</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let gameState = 'START'; // START, BRIEFING, PLAYING, GAMEOVER
+    let currentPhase = 1;
+    let unlockedPhase2 = false;
+    let score = 0, money = 0, energy = 100, timeLeft = 90, progressCount = 0;
+    const targetGoal = 30;
+
+    let motora = {
+        x: 100, y: 0, w: 50, h: 70, vx: 0, vy: 0, speed: 4.5,
+        groundY: 0, jumping: false, jumpCount: 0, facing: 1,
+        vehicle: null, vehicleTimer: 0, expression: 'neutral', exprTimer: 0,
+        onWire: false, wireIndex: 0
+    };
+
+    let keys = { left: false, right: false, up: false, down: false };
+    let projectiles = [];
+    let houses = [];
+    let wires = [];
+    let surprises = [];
+    let rivals = [];
+
+    function initLevel() {
+        motora.x = 80;
+        motora.groundY = canvas.height * 0.6;
+        motora.y = motora.groundY - motora.h;
+        motora.vy = 0;
+        motora.onWire = false;
+        projectiles = [];
+        surprises = [];
+        rivals = [];
+        houses = [];
+        wires = [];
+
+        if (currentPhase === 1) {
+            for (let i = 0; i < 35; i++) {
+                houses.push({
+                    x: 300 + i * 280,
+                    y: canvas.height * 0.6 - 110,
+                    w: 80, h: 110,
+                    type: i % 3 === 0 ? 'Internet' : i % 3 === 1 ? 'VoIP' : 'TV',
+                    solved: false,
+                    issueTimer: Math.random() * 100
+                });
+            }
+        } else {
+            for (let i = 0; i < 35; i++) {
+                let hasWire = (i % 4 !== 3); // Vãos sem fiação a cada 3 postes
+                wires.push({
+                    x: 350 + i * 300,
+                    poleY: canvas.height * 0.35,
+                    hasWire: hasWire,
+                    connected: false
+                });
+            }
+        }
+
+        // Gerar rivais iniciais
+        for (let i = 0; i < 6; i++) {
+            rivals.push({
+                x: 600 + i * 500,
+                y: canvas.height * 0.6 - 45,
+                w: 40, h: 45,
+                type: i % 3 === 0 ? 'vivo' : i % 3 === 1 ? 'nio' : 'tim',
+                vx: -1.5, alive: true
+            });
+        }
+    }
+
+    function startBriefing(phase) {
+        if (phase === 2 && !unlockedPhase2) {
+            alert("🔒 Conclua as 30 casinhas da Fase 1 para desbloquear a Rede Fibra nas Alturas!");
+            return;
+        }
+        currentPhase = phase;
+        document.getElementById('screen-start').style.display = 'none';
+        document.getElementById('screen-briefing').style.display = 'flex';
+
+        let title = document.getElementById('briefing-title');
+        let desc = document.getElementById('briefing-desc');
+
+        if (phase === 1) {
+            title.innerText = "📋 BRIEFING: FASE 1 - DISQUINHOS FILTRO VT";
+            desc.innerHTML = "Corra pelas casinhas ajudando clientes com problemas de <b>Internet, VoIP e TV</b>. Dispare os <b>Disquinhos da Claro</b>.<br><br>• Acertar casinha: +15s, +10% de Energia e +1 objetivo.<br>• Pular na cabeça dos rivais (Vivo, Nio, Tim): +R$ 35 e +35% Energia!<br>• Meta: Atingir 30 casinhas consertadas.";
+        } else {
+            title.innerText = "📋 BRIEFING: FASE 2 - REDE FIBRA NAS ALTURAS";
+            desc.innerHTML = "Equipado com o cinto de fibra óptica, interligue os <b>Postes e Caixas CTO</b>. Use as <b>escadas amarelas (⬆️)</b> para subir e caminhar pela fiação aérea com 100% de segurança!<br><br>• Cuidado com os vãos sem fiação: desça pela escada (⬇️) ou caia na rua para encarar os rivais.<br>• Meta: 30 conexões de fibra concluídas.";
+        }
+    }
+
+    function launchPhaseFromBriefing() {
+        document.getElementById('screen-briefing').style.display = 'none';
+        gameState = 'PLAYING';
+        score = 0; money = 0; energy = 100; timeLeft = 90; progressCount = 0;
+        initLevel();
+    }
+
+    function switchPhase(phase) {
+        if (phase === 2 && !unlockedPhase2) {
+            alert("🔒 Fase 2 bloqueada! Complete a Fase 1 primeiro.");
+            return;
+        }
+        currentPhase = phase;
+        progressCount = 0;
+        initLevel();
+    }
+
+    function togglePause() {
+        if (gameState === 'PLAYING') gameState = 'PAUSED';
+        else if (gameState === 'PAUSED') gameState = 'PLAYING';
+    }
+
+    function backToMenu() {
+        gameState = 'START';
+        document.getElementById('screen-gameover').style.display = 'none';
+        document.getElementById('screen-start').style.display = 'flex';
+    }
+
+    function openGuide() { document.getElementById('screen-guide').style.display = 'flex'; }
+    function closeGuide() { document.getElementById('screen-guide').style.display = 'none'; }
+
+    function handleInput(dir, isDown) {
+        keys[dir] = isDown;
+    }
+
+    function doJump() {
+        if (gameState !== 'PLAYING') return;
+        if (motora.onWire) {
+            motora.onWire = false;
+            motora.vy = -8;
+            return;
+        }
+        if (!motora.jumping) {
+            motora.vy = -12.5;
+            motora.jumping = true;
+            motora.jumpCount = 1;
+        } else if (motora.jumpCount === 1) {
+            motora.vy = -11;
+            motora.jumpCount = 2;
+        }
+    }
+
+    function doAction() {
+        if (gameState !== 'PLAYING') return;
+        // Lançar Disquinho ou Cabo Fibra
+        let pSpeed = motora.jumping ? 14 : 9;
+        let isStraight = motora.jumping || motora.onWire;
+        projectiles.push({
+            x: motora.x + (motora.facing > 0 ? motora.w : -10),
+            y: motora.y + motora.h / 2,
+            vx: motora.facing * pSpeed,
+            vy: isStraight ? 0 : -3.5,
+            straight: isStraight,
+            radius: 12,
+            type: currentPhase === 1 ? 'disco' : 'cabo'
+        });
+    }
+
+    function buyVehicle(type) {
+        if (type === 'patinete' && money >= 50) { money -= 50; motora.vehicle = 'patinete'; motora.vehicleTimer = 400; }
+        else if (type === 'bike' && money >= 120) { money -= 120; motora.vehicle = 'bike'; motora.vehicleTimer = 600; }
+        else if (type === 'motinha' && money >= 250) { money -= 250; motora.vehicle = 'motinha'; motora.vehicleTimer = 900; }
+    }
+
+    // Loop Principal de Atualização
+    function updateGame() {
+        if (gameState !== 'PLAYING') return;
+
+        timeLeft -= 1/60;
+        if (timeLeft <= 0 || energy <= 0) {
+            endGame(false, "Seu expediente esgotou ou a Energia chegou a 0%!");
+            return;
+        }
+
+        if (motora.vehicleTimer > 0) {
+            motora.vehicleTimer--;
+            if (motora.vehicleTimer === 0) motora.vehicle = null;
+        }
+
+        if (motora.exprTimer > 0) {
+            motora.exprTimer--;
+            if (motora.exprTimer === 0) motora.expression = 'neutral';
+        }
+
+        // Movimento horizontal
+        let currentSpeed = motora.speed + (motora.vehicle ? 2 : 0);
+        if (keys.left) { motora.vx = -currentSpeed; motora.facing = -1; }
+        else if (keys.right) { motora.vx = currentSpeed; motora.facing = 1; }
+        else { motora.vx = 0; }
+
+        if (motora.onWire) {
+            motora.x += motora.vx;
+            // Verificar vãos sem fiação
+            let wireUnder = wires.find(w => Math.abs(w.x - motora.x) < 40);
+            if (wireUnder && !wireUnder.hasWire) {
+                motora.onWire = false; // Cai do fio
+                motora.vy = 2;
+            }
+            if (keys.down) { motora.onWire = false; motora.vy = 4; } // Descer fio
+        } else {
+            motora.x += motora.vx;
+            // Gravidade e Pulo
+            motora.vy += 0.55;
+            motora.y += motora.vy;
+
+            // Pouso no chão
+            if (motora.y >= motora.groundY - motora.h) {
+                motora.y = motora.groundY - motora.h;
+                motora.vy = 0;
+                motora.jumping = false;
+                motora.jumpCount = 0;
+            }
+
+            // Subir escada de postes na Fase 2
+            if (currentPhase === 2 && keys.up) {
+                let nearPole = wires.find(w => Math.abs(w.x - motora.x) < 30 && w.hasWire);
+                if (nearPole) {
+                    motora.onWire = true;
+                    motora.y = nearPole.poleY - motora.h;
+                    motora.vy = 0;
+                }
+            }
+        }
+
+        // Atualizar Projéteis
+        for (let i = projectiles.length - 1; i >= 0; i--) {
+            let p = projectiles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            if (!p.straight) p.vy += 0.25; // Arco parabólico
+
+            // Colisão com Alvos (Casinhas / Postes)
+            let hit = false;
+            if (currentPhase === 1) {
+                houses.forEach(h => {
+                    if (!h.solved && p.x > h.x && p.x < h.x + h.w && p.y > h.y && p.y < h.y + h.h) {
+                        h.solved = true;
+                        hit = true;
+                        triggerSuccess();
+                    }
+                });
+            } else {
+                wires.forEach(w => {
+                    if (w.hasWire && !w.connected && Math.abs(p.x - w.x) < 30) {
+                        w.connected = true;
+                        hit = true;
+                        triggerSuccess();
+                    }
+                });
+            }
+
+            if (hit || p.x > motora.x + 800 || p.x < motora.x - 800 || p.y > canvas.height) {
+                if (!hit) triggerError();
+                projectiles.splice(i, 1);
+            }
+        }
+
+        // Atualizar Rivais e Colisões
+        rivals.forEach(r => {
+            if (!r.alive) return;
+            r.x += r.vx;
+
+            // Colisão com Motora
+            if (Math.abs(motora.x - r.x) < 35 && Math.abs(motora.y - r.y) < 45 && !motora.onWire) {
+                // Pular na cabeça (Estilo Mario)
+                if (motora.vy > 0 && motora.y + motora.h - 15 <= r.y) {
+                    r.alive = false;
+                    motora.vy = -9;
+                    money += 35;
+                    energy = Math.min(100, energy + 10);
+                    timeLeft += 5;
+                    triggerSuccess();
+                } else {
+                    // Dano por esbarrão
+                    if (motora.vehicle) {
+                        motora.vehicle = null; // veículo absorve o dano
+                    } else {
+                        energy -= 15;
+                        triggerError();
+                    }
+                    motora.x -= 40; // repulsão
+                }
+            }
+        });
+
+        // Atualizar Surpresinhas
+        for (let i = surprises.length - 1; i >= 0; i--) {
+            let s = surprises[i];
+            if (Math.abs(motora.x - s.x) < 40) {
+                if (s.type === 'money') money += 30;
+                else if (s.type === 'energy') energy = Math.min(100, energy + 15);
+                surprises.splice(i, 1);
+            }
+        }
+    }
+
+    function triggerSuccess() {
+        score += 200;
+        progressCount++;
+        timeLeft += 15;
+        energy = Math.min(100, energy + 10);
+        motora.expression = 'happy';
+        motora.exprTimer = 90;
+
+        if (progressCount >= targetGoal) {
+            if (currentPhase === 1) {
+                unlockedPhase2 = true;
+                document.getElementById('btn-f2-top').innerText = "F2 🔌";
+                document.getElementById('menu-btn-f2').innerText = "🚀 INICIAR FASE 2 (FIBRA)";
+                alert("🎉 Fase 1 Concluída com Sucesso! Fase 2 Desbloqueada!");
+                switchPhase(2);
+            } else {
+                endGame(true, "Parabéns! Você concluiu todas as fases e garantiu a excelência na BrasilCenter!");
+            }
+        }
+    }
+
+    function triggerError() {
+        energy = Math.max(0, energy - 15);
+        motora.expression = 'sad';
+        motora.exprTimer = 90;
+    }
+
+    function endGame(win, msg) {
+        gameState = 'GAMEOVER';
+        document.getElementById('screen-gameover').style.display = 'flex';
+        document.getElementById('go-title').innerText = win ? "🏆 EXPEDIENTE CONCLUÍDO!" : "⚠️ FIM DE EXPEDIENTE";
+        document.getElementById('go-title').style.color = win ? "#4ade80" : "#ef4444";
+        document.getElementById('go-text').innerText = msg + `\n\nDinheirinho: R$ ${money} | Pontos: ${score}`;
+    }
+
+    // Loop de Desenho (Render)
+    function drawGame() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        let cameraX = motora.x - canvas.width * 0.3;
+
+        ctx.save();
+        ctx.translate(-cameraX, 0);
+
+        // Desenhar Fundo / Asfalto
+        let groundY = canvas.height * 0.6;
+        ctx.fillStyle = "#15803d";
+        ctx.fillRect(cameraX, groundY, canvas.width, canvas.height - groundY);
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(cameraX, groundY, canvas.width, 12);
+
+        if (currentPhase === 1) {
+            // Desenhar Casinhas
+            houses.forEach(h => {
+                ctx.fillStyle = h.solved ? "#16a34a" : "#cbd5e1";
+                ctx.fillRect(h.x, h.y, h.w, h.h);
+                ctx.fillStyle = "#1e293b";
+                ctx.fillRect(h.x + 20, h.y + 40, 40, 50); // Porta
+                ctx.fillStyle = h.solved ? "#86efac" : "#f87171";
+                ctx.font = "11px sans-serif";
+                ctx.fillText(h.solved ? "✓ OK" : h.type, h.x + 10, h.y - 8);
+            });
+        } else {
+            // Desenhar Postes e Fiação da Fase 2
+            wires.forEach(w => {
+                // Poste
+                ctx.fillStyle = "#64748b";
+                ctx.fillRect(w.x - 6, w.poleY - 40, 12, groundY - (w.poleY - 40));
+                // Caixa CTO
+                ctx.fillStyle = "#eab308";
+                ctx.fillRect(w.x - 15, w.poleY - 30, 30, 30);
+
+                // Escada amarela
+                ctx.fillStyle = "#facc15";
+                for (let sy = w.poleY; sy < groundY; sy += 15) {
+                    ctx.fillRect(w.x - 12, sy, 24, 4);
+                }
+
+                // Cabo aéreo
+                if (w.hasWire) {
+                    ctx.strokeStyle = w.connected ? "#38bdf8" : "#94a3b8";
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(w.x, w.poleY);
+                    ctx.lineTo(w.x + 300, w.poleY);
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle = "#ef4444";
+                    font = "10px sans-serif";
+                    ctx.fillText("⚠️ SEM FIO", w.x - 25, w.poleY - 45);
+                }
+            });
+        }
+
+        // Desenhar Rivais
+        rivals.forEach(r => {
+            if (!r.alive) return;
+            ctx.fillStyle = r.type === 'vivo' ? '#9333ea' : r.type === 'nio' ? '#0284c7' : '#f97316';
+            ctx.fillRect(r.x, r.y, r.w, r.h);
+            ctx.fillStyle = "#fff";
+            ctx.font = "10px sans-serif";
+            ctx.fillText(r.type.toUpperCase(), r.x + 4, r.y - 5);
+        });
+
+        // Desenhar Projéteis
+        projectiles.forEach(p => {
+            ctx.fillStyle = p.type === 'disco' ? '#ef4444' : '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // Desenhar Motora (Boneco Colecionável BrasilCenter)
+        let mx = motora.x, my = motora.y;
+        // Corpo / Uniforme Azul
+        ctx.fillStyle = "#1d4ed8";
+        ctx.fillRect(mx + 8, my + 25, 34, 30);
+        // Crachá
+        ctx.fillStyle = "#e2e8f0";
+        ctx.fillRect(mx + 20, my + 32, 10, 12);
+        // Cabeça
+        ctx.fillStyle = "#fbcfe8";
+        ctx.beginPath();
+        ctx.arc(mx + 25, my + 15, 14, 0, Math.PI * 2);
+        ctx.fill();
+        // Óculos Amarelos
+        ctx.strokeStyle = "#eab308";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(mx + 17, my + 10, 16, 8);
+        // Cavanhaque
+        ctx.fillStyle = "#475569";
+        ctx.fillRect(mx + 20, my + 22, 10, 5);
+
+        // Expressão Facial (Sorriso vs Choro)
+        if (motora.expression === 'happy') {
+            ctx.strokeStyle = "#16a34a";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(mx + 25, my + 20, 5, 0, Math.PI);
+            ctx.stroke();
+        } else if (motora.expression === 'sad') {
+            ctx.strokeStyle = "#2563eb";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(mx + 25, my + 26, 4, Math.PI, 0);
+            ctx.stroke();
+            // Lágrimas
+            ctx.fillStyle = "#38bdf8";
+            ctx.fillRect(mx + 18, my + 20, 3, 6);
+        }
+
+        // Pés / Tênis
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(mx + 6, my + 60, 14, 10);
+        ctx.fillRect(mx + 30, my + 60, 14, 10);
+
+        ctx.restore();
+    }
+
+    // Loop Geral do Jogo
+    function mainLoop() {
+        updateGame();
+        drawGame();
+
+        // Atualizar HUD na Tela
+        document.getElementById('ui-time').innerText = Math.max(0, Math.ceil(timeLeft));
+        document.getElementById('ui-money').innerText = money;
+        document.getElementById('ui-energy').innerText = Math.round(energy);
+        document.getElementById('ui-progress').innerText = `${progressCount}/${targetGoal}`;
+
+        requestAnimationFrame(mainLoop);
+    }
+
+    // Teclado físico
+    window.addEventListener('keydown', e => {
+        if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+        if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+        if (e.key === 'ArrowUp' || e.key === 'w') { keys.up = true; doJump(); }
+        if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
+        if (e.key === ' ') doAction();
+    });
+    window.addEventListener('keyup', e => {
+        if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+        if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+        if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
+        if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
+    });
+
+    requestAnimationFrame(mainLoop);
+</script>
+
+</body>
+</html>
