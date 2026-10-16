@@ -1,3 +1,13 @@
+Bem observado! Como o Motora avança da esquerda para a direita, quando as surpresinhas corriam para a direita (vx: 1.5), elas acabavam fugindo de você!
+Já fiz o ajuste inteligente no código:
+ * Surpresinhas Boas (PEGUE! — Dinheirinho 💵, Super Disco 🟡 e Turbo Dourado ⚡): Agora elas dão um pulinho para a esquerda ao sair da casinha e ficam paradas quicando no mesmo lugar esperando você passar para coletar com calma!
+ * Pegadinhas Ruins (FUJA! — Mini Sinal 🟣 e Sinal Lento 🐢): Agora elas correm para a esquerda (vx: -1.8) na direção do Motora, exigindo que você pule por cima delas para desviar!
+⚡ Dica Rápida (Para mudar só 1 linha no GitHub se preferir):
+Se não quiser colar o código inteiro de novo, lá no seu arquivo index.html do GitHub (por volta da linha 425, dentro da função registerSuccess), basta trocar:
+vx: 1.5, vy: -5.5,
+por:
+vx: (st === 'mini' || st === 'slow') ? -1.8 : 0, vy: -5.5,
+Ou, se achar mais prático, clique em Copiar no código completo já corrigido abaixo e cole por cima lá no seu index.html do GitHub:
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1362,3 +1372,4 @@ requestAnimationFrame(loop);
 </script>
 </body>
 </html>
+
